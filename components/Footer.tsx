@@ -9,11 +9,11 @@ const NAVIGATION_LINKS = [
 ];
 
 const SERVICES_LINKS = [
-  { label: "Livraison & Emballage", href: "/services/livraison" },
+  { label: "Livraison & Emballage", href: "/livraison" },
   { label: "Fabrication sur mesure", href: "/services/sur-mesure" },
-  { label: "Entretien & Patine", href: "/services/entretien" },
+  { label: "Entretien & Patine", href: "/entretien" },
   { label: "Questions fréquentes", href: "/faq" },
-  { label: "Politique de retour", href: "/retours" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function Footer() {
@@ -136,38 +136,57 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-border">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-body text-[11px] text-ink-muted tracking-wide">
-            &copy; {new Date().getFullYear()} Maison Attar.{" "}
-            <span className="text-ink-muted/70">Tous droits réservés.</span>
-          </p>
+        <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-5 flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="font-body text-[11px] text-ink-muted tracking-wide">
+              &copy; {new Date().getFullYear()} Maison Attar.{" "}
+              <span className="text-ink-muted/70">Tous droits réservés.</span>
+            </p>
 
-          <p className="font-body text-[11px] text-ink-muted tracking-[0.12em] uppercase">
-            Fabriqué à Fès, Maroc
-          </p>
+            <p className="font-body text-[11px] text-ink-muted tracking-[0.12em] uppercase">
+              Fabriqué à Fès, Maroc
+            </p>
 
-          {/* Language selector placeholder */}
-          <div className="flex items-center gap-3">
-            <button
-              className="font-body text-[11px] tracking-[0.1em] text-ink-light hover:text-ink transition-colors duration-200 uppercase font-medium"
-              aria-label="Langue française — actuelle"
-            >
-              FR
-            </button>
-            <span className="text-border" aria-hidden="true">|</span>
-            <button
-              className="font-body text-[11px] tracking-[0.1em] text-ink-muted hover:text-ink transition-colors duration-200 uppercase"
-              aria-label="Switch to English"
-            >
-              EN
-            </button>
-            <span className="text-border" aria-hidden="true">|</span>
-            <button
-              className="font-body text-[11px] tracking-[0.1em] text-ink-muted hover:text-ink transition-colors duration-200 uppercase"
-              aria-label="التبديل إلى العربية"
-            >
-              AR
-            </button>
+            {/* Language selector placeholder */}
+            <div className="flex items-center gap-3">
+              <button
+                className="font-body text-[11px] tracking-[0.1em] text-ink-light hover:text-ink transition-colors duration-200 uppercase font-medium"
+                aria-label="Langue française — actuelle"
+              >
+                FR
+              </button>
+              <span className="text-border" aria-hidden="true">|</span>
+              <button
+                className="font-body text-[11px] tracking-[0.1em] text-ink-muted hover:text-ink transition-colors duration-200 uppercase"
+                aria-label="Switch to English"
+              >
+                EN
+              </button>
+              <span className="text-border" aria-hidden="true">|</span>
+              <button
+                className="font-body text-[11px] tracking-[0.1em] text-ink-muted hover:text-ink transition-colors duration-200 uppercase"
+                aria-label="التبديل إلى العربية"
+              >
+                AR
+              </button>
+            </div>
+          </div>
+
+          {/* Legal links */}
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 border-t border-border/50 pt-4">
+            {[
+              { label: "CGV", href: "/cgv" },
+              { label: "Mentions légales", href: "/mentions-legales" },
+              { label: "Politique de confidentialité", href: "/politique-confidentialite" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="font-body text-[10px] tracking-[0.08em] text-ink-muted hover:text-ink transition-colors duration-200"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

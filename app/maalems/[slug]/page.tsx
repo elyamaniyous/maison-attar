@@ -20,12 +20,25 @@ export async function generateMetadata({
   const { slug } = await params;
   const maalem = maalems.find((m) => m.slug === slug);
   if (!maalem) return {};
+  const BASE_URL = "https://beautiful-charm-production-7244.up.railway.app";
+  const desc = `${maalem.name} — ${maalem.specialty}. ${maalem.yearsExperience} ans de métier, ${maalem.piecesCreated} pièces créées à Fès. Maalem Maison Attar.`;
   return {
-    title: `${maalem.name} — Maalem | Maison Attar`,
-    description: `${maalem.name}, ${maalem.specialty}. ${maalem.yearsExperience} ans de métier, ${maalem.piecesCreated} pièces créées. ${maalem.quote}`,
+    title: `${maalem.name} — Maître Artisan Zelligeur de Fès`,
+    description: desc.length > 160 ? desc.substring(0, 157) + "..." : desc,
+    alternates: {
+      canonical: `${BASE_URL}/maalems/${maalem.slug}`,
+    },
+    keywords: [
+      maalem.name,
+      "maalem zellige Fès",
+      "artisan zelligeur marocain",
+      maalem.specialty,
+      "Maison Attar artisan",
+    ],
     openGraph: {
       title: `${maalem.name} — Maître artisan zellige | Maison Attar`,
       description: maalem.quote,
+      url: `${BASE_URL}/maalems/${maalem.slug}`,
     },
   };
 }

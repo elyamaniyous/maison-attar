@@ -130,3 +130,85 @@ export interface FabricationUpdate {
   message: string;
   date: string;
 }
+
+// ─── Admin Configurator Types ─────────────────────────────────────────────────
+
+export interface ConfiguratorCategory {
+  id: string;
+  label: string;
+  description: string;
+  options: ConfiguratorOption[];
+}
+
+export interface ConfiguratorOption {
+  id: string;
+  label: string;
+  description?: string;
+  image?: string;
+  costPrice: number;    // prix de revient
+  sellingPrice: number; // prix de vente (markup over base)
+  available: boolean;
+  isSurMesure?: boolean; // flag for custom/bespoke sizing option
+  dimensions?: {         // specific dimension data for size options
+    width?: number;
+    depth?: number;
+    diameter?: number;
+    label?: string;
+  };
+}
+
+export interface TableConfigurator {
+  sizes: ConfiguratorCategory;
+  shapes: ConfiguratorCategory;        // forme: rectangulaire, ronde, ovale, carree
+  legStyles: ConfiguratorCategory;     // pieds: cylindre, compas, forge, cube
+  colors: ConfiguratorCategory;        // couleur base: noir, blanc, laiton, bronze
+  zelligePatterns: ConfiguratorCategory; // motif/forme du zellige
+  legColors: ConfiguratorCategory;     // couleur des pieds
+}
+
+export interface ConfiguredTable {
+  size: string;
+  shape: string;
+  legStyle: string;
+  color: string;
+  zelligePattern: string;
+  legColor: string;
+  totalCostPrice: number;
+  totalSellingPrice: number;
+}
+
+// ─── AI Assistant Types ───────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+// ─── WhatsApp Automation Types ────────────────────────────────────────────────
+
+export interface WhatsAppGroup {
+  orderId: string;
+  groupName: string;
+  members: string[];
+  createdAt: Date;
+  messages: WhatsAppMessage[];
+}
+
+export interface WhatsAppMessage {
+  sender: string;
+  content: string;
+  image?: string;
+  timestamp: Date;
+  type: 'text' | 'image' | 'status_update';
+}
+
+// ─── Legal Pages ──────────────────────────────────────────────────────────────
+
+export interface LegalPage {
+  title: string;
+  slug: string;
+  content: string;
+  lastUpdated: string;
+}

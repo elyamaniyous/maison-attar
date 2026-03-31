@@ -9,6 +9,8 @@ const NAV_LINKS = [
   { label: "Collection", href: "/collection" },
   { label: "Notre Histoire", href: "/notre-histoire" },
   { label: "Les Maalems", href: "/les-maalems" },
+  { label: "Journal", href: "/journal" },
+  { label: "Configurateur", href: "/configurateur" },
 ];
 
 export default function Header() {

@@ -2,13 +2,25 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Notre Histoire | Maison Attar",
+  title: "Notre Histoire — L'Héritage du Zellige de Fès",
   description:
-    "L'histoire de Maison Attar : le zellige de Fès, l'acier forgé à la main, et la rencontre de deux matières qui se défient et se complètent depuis le Xe siècle.",
+    "L'histoire de Maison Attar : le zellige de Fès, l'acier forgé à la main, et la rencontre de deux matières qui se défient et se complètent depuis le XIVe siècle. Héritage transmis de génération en génération.",
+  alternates: {
+    canonical: "https://beautiful-charm-production-7244.up.railway.app/notre-histoire",
+  },
+  keywords: [
+    "histoire Maison Attar",
+    "zellige Fès héritage",
+    "maalems tradition",
+    "artisanat marocain luxe",
+    "médina Fès artisanat",
+    "XIVe siècle zellige",
+  ],
   openGraph: {
     title: "Notre Histoire | Maison Attar",
     description:
       "Née dans la médina de Fès, Maison Attar porte l'héritage du zellige et de la forge dans des pièces conçues pour durer.",
+    url: "https://beautiful-charm-production-7244.up.railway.app/notre-histoire",
   },
 };
 

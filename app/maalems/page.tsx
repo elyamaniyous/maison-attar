@@ -3,13 +3,27 @@ import Link from "next/link";
 import { maalems } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "Les Maalems | Maison Attar",
+  title: "Les Maalems — Maîtres Artisans Zelligeurs de Fès",
   description:
-    "Rencontrez les maîtres artisans de Fès qui créent chaque pièce Maison Attar. Hassan Bensouda, Youssef El Ouali, Driss Aït Taleb, Mohammed Cherkaoui — des lignées de savoir-faire transmis de génération en génération.",
+    "Rencontrez les maîtres artisans de Fès qui créent chaque pièce Maison Attar. Hassan Bensouda, Youssef El Ouali, Driss Aït Taleb, Mohammed Cherkaoui — des lignées de savoir-faire transmis depuis le XIVe siècle.",
+  alternates: {
+    canonical: "https://beautiful-charm-production-7244.up.railway.app/maalems",
+  },
+  keywords: [
+    "maalem zellige Fès",
+    "artisan zelligeur marocain",
+    "Hassan Bensouda",
+    "Youssef El Ouali",
+    "Driss Aït Taleb",
+    "Mohammed Cherkaoui",
+    "maître artisan Fès",
+    "zellige traditionnel",
+  ],
   openGraph: {
     title: "Les Maalems | Maison Attar",
     description:
       "Quatre maîtres artisans de Fès, quatre approches du zellige et de l'acier. La main derrière chaque pièce.",
+    url: "https://beautiful-charm-production-7244.up.railway.app/maalems",
   },
 };
 

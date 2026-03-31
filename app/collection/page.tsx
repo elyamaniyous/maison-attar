@@ -1,8 +1,36 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { products } from "@/lib/data";
 import type { Product, ProductCategory } from "@/lib/types";
 import ProductCard from "@/components/product/ProductCard";
 import CollectionFilters from "@/components/product/CollectionFilters";
+import { CollectionPageSchema, BreadcrumbSchema } from "@/components/StructuredData";
+
+export const metadata: Metadata = {
+  title: "Collection — Tables en Zellige & Acier Artisanal",
+  description:
+    "Découvrez la collection complète Maison Attar : tables basses, tables à manger, tables d'appoint et consoles en zellige marocain et acier forgé. Pièces uniques, créées à la main à Fès.",
+  alternates: {
+    canonical: "https://beautiful-charm-production-7244.up.railway.app/collection",
+  },
+  keywords: [
+    "collection zellige marocain",
+    "table basse zellige",
+    "table à manger zellige",
+    "console zellige",
+    "mobilier artisanal Fès",
+    "pièces uniques zellige",
+    "acier forgé table",
+    "décoration luxe marocaine",
+  ],
+  openGraph: {
+    title: "Collection Maison Attar | Tables en Zellige & Acier Artisanal",
+    description:
+      "Tables basses, à manger, d'appoint et consoles en zellige marocain et acier forgé. Chaque pièce est unique, créée à Fès.",
+    url: "https://beautiful-charm-production-7244.up.railway.app/collection",
+    type: "website",
+  },
+};
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -43,6 +71,13 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
 
   return (
     <main className="min-h-screen bg-cream">
+      <CollectionPageSchema />
+      <BreadcrumbSchema
+        items={[
+          { name: "Maison Attar", href: "/" },
+          { name: "Collection", href: "/collection" },
+        ]}
+      />
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <section className="pt-32 pb-16 px-6 md:px-12 lg:px-20 border-b border-border">
         <div className="max-w-screen-xl mx-auto">

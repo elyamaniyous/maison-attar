@@ -5,6 +5,16 @@ import type { Maalem } from "@/lib/types";
 import ProductGallery from "@/components/product/ProductGallery";
 import AddToCartPanel from "@/components/product/AddToCartPanel";
 import ProductCard from "@/components/product/ProductCard";
+import { ProductSchema, BreadcrumbSchema } from "@/components/StructuredData";
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+const CATEGORY_LABELS: Record<string, string> = {
+  "table-basse":     "Table Basse",
+  "table-a-manger":  "Table à Manger",
+  "table-d-appoint": "Table d'Appoint",
+  "console":         "Console",
+};
 
 // ─── Static params ──────────────────────────────────────────────────────────
 
@@ -22,9 +32,34 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = products.find((p) => p.slug === slug);
   if (!product) return {};
+  const BASE_URL = "https://beautiful-charm-production-7244.up.railway.app";
   return {
-    title: `${product.name} — Maison Attar`,
-    description: product.description,
+    title: `${product.name} — Table en Zellige Artisanal`,
+    description: product.description.length > 160
+      ? product.description.substring(0, 157) + "..."
+      : product.description,
+    alternates: {
+      canonical: `${BASE_URL}/collection/${product.slug}`,
+    },
+    keywords: [
+      product.name,
+      "zellige marocain",
+      "table zellige",
+      "acier forgé",
+      "artisanat Fès",
+      "pièce unique",
+      "décoration luxe",
+      CATEGORY_LABELS[product.category] ?? product.category,
+    ],
+    openGraph: {
+      title: `${product.name} | Maison Attar`,
+      description: product.description,
+      url: `${BASE_URL}/collection/${product.slug}`,
+      type: "website",
+      images: product.images[0]
+        ? [{ url: `${BASE_URL}${product.images[0]}`, alt: product.name }]
+        : [],
+    },
   };
 }
 
@@ -45,13 +80,6 @@ function getEstimatedDelivery(): string {
     year: "numeric",
   });
 }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  "table-basse":     "Table Basse",
-  "table-a-manger":  "Table à Manger",
-  "table-d-appoint": "Table d'Appoint",
-  "console":         "Console",
-};
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
@@ -76,6 +104,14 @@ export default async function ProductDetailPage({
 
   return (
     <main className="min-h-screen bg-cream">
+      <ProductSchema product={product} />
+      <BreadcrumbSchema
+        items={[
+          { name: "Maison Attar", href: "/" },
+          { name: "Collection", href: "/collection" },
+          { name: product.name, href: `/collection/${product.slug}` },
+        ]}
+      />
 
       {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
       <nav className="px-6 md:px-12 lg:px-20 pt-28 pb-6">

@@ -1,7 +1,25 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getFeaturedProducts } from "@/lib/data";
 import type { Product } from "@/lib/types";
 import NewsletterForm from "@/components/NewsletterForm";
+import { LocalBusinessSchema, CollectionPageSchema } from "@/components/StructuredData";
+
+export const metadata: Metadata = {
+  title: "Maison Attar | Zellige & Acier Artisanal de Fès",
+  description:
+    "Maison Attar crée des tables en zellige marocain et acier forgé artisanal, nées de la rencontre entre l'héritage des maalems de Fès et une sensibilité contemporaine. Chaque pièce est unique, fabriquée à la main.",
+  alternates: {
+    canonical: "https://beautiful-charm-production-7244.up.railway.app",
+  },
+  openGraph: {
+    title: "Maison Attar | Zellige & Acier Artisanal de Fès",
+    description:
+      "Tables en zellige marocain et acier forgé artisanal. Pièces uniques créées par nos maalems à Fès. Héritage transmis depuis le XIVe siècle.",
+    url: "https://beautiful-charm-production-7244.up.railway.app",
+    type: "website",
+  },
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -629,6 +647,8 @@ export default function HomePage() {
       <MaalemSection />
       <ProcessSection />
       <NewsletterSection />
+      <LocalBusinessSchema />
+      <CollectionPageSchema />
     </>
   );
 }
