@@ -8,6 +8,7 @@ import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { OrganizationSchema, WebSiteSchema } from "@/components/StructuredData";
 import GeoMeta from "@/components/GeoMeta";
+import CursorFollower from "@/components/animations/CursorFollower";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -110,6 +111,7 @@ export default function RootLayout({
             </main>
             <Footer />
             <ChatAssistant />
+            <CursorFollower />
           </CartProvider>
         </WishlistProvider>
       </body>

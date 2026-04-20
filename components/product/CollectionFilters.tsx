@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { motion } from "motion/react";
 
 const CATEGORIES = [
   { value: "all",              label: "Tout" },
@@ -21,7 +22,7 @@ export default function CollectionFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   const currentCategory = searchParams.get("categorie") ?? "all";
   const currentSort = searchParams.get("tri") ?? "default";
@@ -39,45 +40,64 @@ export default function CollectionFilters() {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-5 border-b border-border">
+    <div
+      className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 py-6 border-b border-border/60 transition-opacity duration-300 ${
+        isPending ? "opacity-50" : "opacity-100"
+      }`}
+    >
       {/* Category pills */}
       <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => updateParams("categorie", value)}
-            className={`px-4 py-1.5 text-xs uppercase tracking-widest font-body border transition-all duration-200 ${
-              currentCategory === value
-                ? "border-ink bg-ink text-cream"
-                : "border-border text-ink-muted hover:border-ink-muted hover:text-ink"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        {CATEGORIES.map(({ value, label }, i) => {
+          const isActive = currentCategory === value;
+          return (
+            <motion.button
+              key={value}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+              onClick={() => updateParams("categorie", value)}
+              className={`relative px-5 py-2 text-[10px] uppercase tracking-[0.15em] font-body transition-all duration-300 ${
+                isActive
+                  ? "text-gold border border-gold bg-gold/5"
+                  : "text-ink-muted border border-border/60 hover:border-ink-muted/60 hover:text-ink bg-transparent"
+              }`}
+            >
+              {label}
+              {isActive && (
+                <motion.span
+                  layoutId="active-category-indicator"
+                  className="absolute inset-0 border border-gold pointer-events-none"
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                />
+              )}
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Sort */}
       <div className="flex items-center gap-3 shrink-0">
-        <span className="text-xs uppercase tracking-widest text-ink-muted font-body hidden sm:block">
+        <span className="text-[10px] uppercase tracking-[0.15em] text-ink-muted font-body hidden sm:block">
           Trier par
         </span>
-        <select
-          value={currentSort}
-          onChange={(e) => updateParams("tri", e.target.value)}
-          className="text-sm font-body text-ink bg-transparent border border-border px-3 py-1.5 appearance-none cursor-pointer hover:border-ink-muted transition-colors duration-200 pr-8 focus:outline-none focus:border-ink"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238A8A8A' strokeWidth='1.25' strokeLinecap='round'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right 10px center",
-          }}
-        >
-          {SORT_OPTIONS.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={currentSort}
+            onChange={(e) => updateParams("tri", e.target.value)}
+            className="text-xs font-body text-ink bg-transparent border border-border/60 px-4 py-2 appearance-none cursor-pointer hover:border-gold/50 transition-colors duration-300 pr-8 focus:outline-none focus:border-gold/70 tracking-wide"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23C4A265' strokeWidth='1.25' strokeLinecap='round'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 10px center",
+            }}
+          >
+            {SORT_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );

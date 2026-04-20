@@ -5,6 +5,9 @@ import type { Product, ProductCategory } from "@/lib/types";
 import ProductCard from "@/components/product/ProductCard";
 import CollectionFilters from "@/components/product/CollectionFilters";
 import { CollectionPageSchema, BreadcrumbSchema } from "@/components/StructuredData";
+import CollectionHero from "@/components/collection/CollectionHero";
+import StaggerChildren from "@/components/animations/StaggerChildren";
+import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export const metadata: Metadata = {
   title: "Collection — Tables en Zellige & Acier Artisanal",
@@ -78,22 +81,9 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
           { name: "Collection", href: "/collection" },
         ]}
       />
-      {/* ── Page header ──────────────────────────────────────────────────── */}
-      <section className="pt-32 pb-16 px-6 md:px-12 lg:px-20 border-b border-border">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="max-w-2xl">
-            <p className="animate-fade-up text-xs uppercase tracking-widest text-gold font-body mb-4">
-              Maison Attar — Collection
-            </p>
-            <h1 className="animate-fade-up delay-100 font-display text-5xl md:text-6xl lg:text-7xl text-ink leading-[1.05] mb-6">
-              La Collection
-            </h1>
-            <p className="animate-fade-up delay-200 font-body text-ink-muted text-lg leading-relaxed">
-              Pièces uniques, fabriquées à la main à Fès
-            </p>
-          </div>
-        </div>
-      </section>
+
+      {/* ── Hero Banner ───────────────────────────────────────────────────── */}
+      <CollectionHero />
 
       {/* ── Filters + Grid ───────────────────────────────────────────────── */}
       <section className="px-6 md:px-12 lg:px-20 py-10">
@@ -101,31 +91,37 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
           {/* Filters (client component wrapped in Suspense for useSearchParams) */}
           <Suspense
             fallback={
-              <div className="h-14 border-b border-border animate-pulse bg-warm-gray/30" />
+              <div className="h-14 border-b border-border/60 animate-pulse bg-warm-gray/20" />
             }
           >
             <CollectionFilters />
           </Suspense>
 
           {/* Results count */}
-          <div className="mt-6 mb-8">
-            <p className="text-sm text-ink-muted font-body">
-              {filtered.length} {filtered.length === 1 ? "pièce" : "pièces"}
+          <ScrollReveal direction="none" delay={0.1} className="mt-6 mb-10">
+            <p className="text-[11px] uppercase tracking-[0.12em] text-ink-muted font-body">
+              <span className="font-display text-base text-ink not-italic normal-case tracking-normal mr-2">
+                {filtered.length}
+              </span>
+              {filtered.length === 1 ? "pièce" : "pièces"}
               {categorie && categorie !== "all" ? " dans cette catégorie" : " dans la collection"}
             </p>
-          </div>
+          </ScrollReveal>
 
           {/* Product grid */}
           {filtered.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-14">
+            <StaggerChildren
+              staggerDelay={0.08}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16"
+            >
               {filtered.map((product, index) => (
                 <ProductCard
                   key={product.id}
                   product={product}
-                  animationDelay={index * 80}
+                  index={index}
                 />
               ))}
-            </div>
+            </StaggerChildren>
           ) : (
             <div className="py-24 text-center">
               <p className="font-display text-2xl text-ink-muted italic mb-3">
@@ -139,14 +135,27 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
         </div>
       </section>
 
-      {/* ── Editorial footer band ─────────────────────────────────────────── */}
-      <section className="border-t border-border px-6 md:px-12 lg:px-20 py-20 mt-10">
+      {/* ── Editorial quote ───────────────────────────────────────────────── */}
+      <section className="border-t border-border/60 px-6 md:px-12 lg:px-20 py-28 mt-10">
         <div className="max-w-screen-xl mx-auto text-center">
-          <p className="animate-fade-in font-display text-3xl md:text-4xl text-ink leading-relaxed italic max-w-2xl mx-auto">
-            &ldquo;Chaque table naît d'un dialogue entre le feu, la terre
-            et les mains d'un maalem.&rdquo;
-          </p>
-          <div className="mt-6 w-8 h-px bg-gold mx-auto" />
+          <ScrollReveal direction="up" delay={0}>
+            <p className="font-display italic leading-[1.3] text-ink max-w-3xl mx-auto"
+              style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.5rem)" }}
+            >
+              &ldquo;Chaque table naît d'un dialogue entre le feu, la terre
+              et les mains d'un maalem.&rdquo;
+            </p>
+          </ScrollReveal>
+          <ScrollReveal direction="none" delay={0.3}>
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <div className="w-12 h-px bg-gold/40" />
+              <div className="w-1.5 h-1.5 rounded-full bg-gold/60" />
+              <div className="w-12 h-px bg-gold/40" />
+            </div>
+            <p className="mt-5 text-[10px] uppercase tracking-[0.2em] text-gold font-body">
+              Maison Attar — Fès, Maroc
+            </p>
+          </ScrollReveal>
         </div>
       </section>
     </main>
