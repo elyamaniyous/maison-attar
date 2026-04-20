@@ -4,7 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const NAV_LINKS = [
+type NavLink = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  children?: { href: string; label: string }[];
+};
+
+const NAV_LINKS: NavLink[] = [
   {
     href: "/admin",
     label: "Dashboard",
@@ -16,6 +23,26 @@ const NAV_LINKS = [
         <rect x="3" y="14" width="7" height="7" />
       </svg>
     ),
+  },
+  {
+    href: "/admin/contenu",
+    label: "Contenu",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg>
+    ),
+    children: [
+      { href: "/admin/contenu", label: "Pages" },
+      { href: "/admin/contenu/produits", label: "Produits" },
+      { href: "/admin/contenu/blog", label: "Blog" },
+      { href: "/admin/contenu/maalems", label: "Maalems" },
+      { href: "/admin/contenu/settings", label: "Paramètres" },
+    ],
   },
   {
     href: "/admin/configurateur",
@@ -39,17 +66,8 @@ const NAV_LINKS = [
     ),
   },
   {
-    href: "/admin/produits",
-    label: "Produits",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-      </svg>
-    ),
-  },
-  {
-    href: "/admin/maalems",
-    label: "Maalems",
+    href: "/admin/utilisateurs",
+    label: "Utilisateurs",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -60,19 +78,61 @@ const NAV_LINKS = [
   },
 ];
 
-function AuthGate({ onAuth }: { onAuth: () => void }) {
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
+type UserInfo = { name: string; email: string; role: string } | null;
 
-  function handleSubmit(e: React.FormEvent) {
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function AuthGate({ onAuth }: { onAuth: (user: UserInfo) => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/cms/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const user: UserInfo = {
+          name: data.name ?? email.split("@")[0],
+          email: data.email ?? email,
+          role: data.role ?? "admin",
+        };
+        localStorage.setItem("admin_auth", "true");
+        localStorage.setItem("admin_user", JSON.stringify(user));
+        onAuth(user);
+        return;
+      }
+    } catch {
+      // API not available — fall through to password check
+    }
+
+    // Fallback: classic password
     if (password === "attar2024") {
+      const user: UserInfo = { name: "Administrateur", email, role: "admin" };
       localStorage.setItem("admin_auth", "true");
-      onAuth();
+      localStorage.setItem("admin_user", JSON.stringify(user));
+      onAuth(user);
     } else {
-      setError(true);
+      setError("Identifiants incorrects");
       setPassword("");
     }
+    setLoading(false);
   }
 
   return (
@@ -92,27 +152,44 @@ function AuthGate({ onAuth }: { onAuth: () => void }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs text-[#8A8A8A] uppercase tracking-widest mb-2 font-body">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(""); }}
+              className={`w-full bg-[#1A1A1A] border rounded px-4 py-3 text-white font-body text-sm outline-none transition-colors focus:border-[#C4A265] ${
+                error ? "border-[#B85C5C]" : "border-[#2A2A2A]"
+              }`}
+              placeholder="votre@email.com"
+              autoFocus
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-[#8A8A8A] uppercase tracking-widest mb-2 font-body">
               Mot de passe
             </label>
             <input
               type="password"
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(false); }}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
               className={`w-full bg-[#1A1A1A] border rounded px-4 py-3 text-white font-body text-sm outline-none transition-colors focus:border-[#C4A265] ${
                 error ? "border-[#B85C5C]" : "border-[#2A2A2A]"
               }`}
               placeholder="••••••••"
-              autoFocus
+              required
             />
             {error && (
-              <p className="text-[#B85C5C] text-xs mt-1.5 font-body">Mot de passe incorrect</p>
+              <p className="text-[#B85C5C] text-xs mt-1.5 font-body">{error}</p>
             )}
           </div>
           <button
             type="submit"
-            className="w-full bg-[#C4A265] hover:bg-[#D4B87A] text-[#0F0F0F] font-body text-sm font-medium py-3 rounded transition-colors"
+            disabled={loading}
+            className="w-full bg-[#C4A265] hover:bg-[#D4B87A] disabled:opacity-60 text-[#0F0F0F] font-body text-sm font-medium py-3 rounded transition-colors"
           >
-            Accéder au back-office
+            {loading ? "Connexion…" : "Accéder au back-office"}
           </button>
         </form>
 
@@ -127,25 +204,60 @@ function AuthGate({ onAuth }: { onAuth: () => void }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [user, setUser] = useState<UserInfo>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [contenuOpen, setContenuOpen] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem("admin_auth");
+    const storedUser = localStorage.getItem("admin_user");
     setAuthenticated(auth === "true");
+    if (storedUser) {
+      try { setUser(JSON.parse(storedUser)); } catch { /* ignore */ }
+    }
   }, []);
+
+  // Auto-expand Contenu when on a contenu sub-route
+  useEffect(() => {
+    if (pathname.startsWith("/admin/contenu")) setContenuOpen(true);
+  }, [pathname]);
 
   if (authenticated === null) {
     return <div className="min-h-screen bg-[#0F0F0F]" />;
   }
 
   if (!authenticated) {
-    return <AuthGate onAuth={() => setAuthenticated(true)} />;
+    return (
+      <AuthGate
+        onAuth={(u) => {
+          setUser(u);
+          setAuthenticated(true);
+        }}
+      />
+    );
   }
 
   function isActive(href: string) {
     if (href === "/admin") return pathname === "/admin";
+    if (href === "/admin/contenu") return pathname === "/admin/contenu";
     return pathname.startsWith(href);
   }
+
+  function getActiveLabel(): string {
+    for (const link of NAV_LINKS) {
+      if (link.children) {
+        for (const child of link.children) {
+          if (isActive(child.href)) return child.label;
+        }
+        if (isActive(link.href)) return link.label;
+      } else {
+        if (isActive(link.href)) return link.label;
+      }
+    }
+    return "Admin";
+  }
+
+  const initials = user?.name ? getInitials(user.name) : "A";
 
   return (
     <div className="min-h-screen bg-[#111111] flex font-body">
@@ -176,27 +288,88 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <ul className="space-y-0.5 px-2">
             {NAV_LINKS.map((link) => {
               const active = isActive(link.href);
+              const hasChildren = !!link.children;
+              const isContenuOpen = hasChildren && contenuOpen && !sidebarCollapsed;
+
               return (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded transition-colors text-sm ${
-                      active
-                        ? "bg-[#C4A265]/10 text-[#C4A265]"
-                        : "text-[#8A8A8A] hover:text-white hover:bg-white/5"
-                    }`}
-                    title={sidebarCollapsed ? link.label : undefined}
-                  >
-                    <span className={`shrink-0 ${active ? "text-[#C4A265]" : ""}`}>
-                      {link.icon}
-                    </span>
-                    {!sidebarCollapsed && (
-                      <span className="font-body">{link.label}</span>
-                    )}
-                    {active && !sidebarCollapsed && (
-                      <span className="ml-auto w-1 h-1 rounded-full bg-[#C4A265]" />
-                    )}
-                  </Link>
+                  {hasChildren ? (
+                    <>
+                      <button
+                        onClick={() => setContenuOpen((v) => !v)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded transition-colors text-sm ${
+                          active || pathname.startsWith("/admin/contenu")
+                            ? "bg-[#C4A265]/10 text-[#C4A265]"
+                            : "text-[#8A8A8A] hover:text-white hover:bg-white/5"
+                        }`}
+                        title={sidebarCollapsed ? link.label : undefined}
+                      >
+                        <span className="shrink-0">{link.icon}</span>
+                        {!sidebarCollapsed && (
+                          <>
+                            <span className="font-body flex-1 text-left">{link.label}</span>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={`transition-transform ${contenuOpen ? "rotate-180" : ""}`}
+                            >
+                              <path d="M6 9l6 6 6-6" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
+                      {isContenuOpen && (
+                        <ul className="mt-0.5 ml-4 pl-3 border-l border-[#262626] space-y-0.5">
+                          {link.children!.map((child) => {
+                            const childActive = isActive(child.href);
+                            return (
+                              <li key={child.href}>
+                                <Link
+                                  href={child.href}
+                                  className={`flex items-center px-3 py-2 rounded text-sm transition-colors ${
+                                    childActive
+                                      ? "text-[#C4A265]"
+                                      : "text-[#8A8A8A] hover:text-white hover:bg-white/5"
+                                  }`}
+                                >
+                                  {child.label}
+                                  {childActive && (
+                                    <span className="ml-auto w-1 h-1 rounded-full bg-[#C4A265]" />
+                                  )}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded transition-colors text-sm ${
+                        active
+                          ? "bg-[#C4A265]/10 text-[#C4A265]"
+                          : "text-[#8A8A8A] hover:text-white hover:bg-white/5"
+                      }`}
+                      title={sidebarCollapsed ? link.label : undefined}
+                    >
+                      <span className={`shrink-0 ${active ? "text-[#C4A265]" : ""}`}>
+                        {link.icon}
+                      </span>
+                      {!sidebarCollapsed && (
+                        <span className="font-body">{link.label}</span>
+                      )}
+                      {active && !sidebarCollapsed && (
+                        <span className="ml-auto w-1 h-1 rounded-full bg-[#C4A265]" />
+                      )}
+                    </Link>
+                  )}
                 </li>
               );
             })}
@@ -229,7 +402,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button
             onClick={() => {
               localStorage.removeItem("admin_auth");
+              localStorage.removeItem("admin_user");
               setAuthenticated(false);
+              setUser(null);
             }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded text-[#4A4A4A] hover:text-[#B85C5C] hover:bg-[#B85C5C]/5 transition-colors text-sm"
           >
@@ -246,9 +421,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Top bar */}
         <header className="h-[64px] border-b border-[#262626] bg-[#1A1A1A]/50 backdrop-blur-sm flex items-center justify-between px-6 shrink-0">
           <div>
-            <h1 className="text-white text-sm font-medium">
-              {NAV_LINKS.find((l) => isActive(l.href))?.label ?? "Admin"}
-            </h1>
+            <h1 className="text-white text-sm font-medium">{getActiveLabel()}</h1>
             <p className="text-[#4A4A4A] text-xs">
               {new Date().toLocaleDateString("fr-FR", {
                 weekday: "long",
@@ -269,8 +442,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </svg>
               Voir le site
             </Link>
-            <div className="w-8 h-8 rounded-full bg-[#C4A265]/20 flex items-center justify-center text-[#C4A265] text-xs font-medium">
-              A
+            <div
+              className="w-8 h-8 rounded-full bg-[#C4A265]/20 flex items-center justify-center text-[#C4A265] text-xs font-medium cursor-default"
+              title={user ? `${user.name} — ${user.role}` : "Admin"}
+            >
+              {initials}
             </div>
           </div>
         </header>
