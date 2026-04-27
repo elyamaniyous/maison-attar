@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     "retour table zellige",
   ],
   openGraph: {
-    title: "FAQ — Questions Fréquentes | Maison Attar",
+    title: "FAQ — Questions Fréquentes",
     description:
       "Réponses à toutes vos questions sur nos tables en zellige artisanal : commandes, fabrication, livraison, paiement et entretien.",
     url: "https://beautiful-charm-production-7244.up.railway.app/faq",

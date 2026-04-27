@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Mentions Légales | Maison Attar",
+  title: "Mentions Légales",
   description: "Mentions légales de Maison Attar SARL — informations sur l'éditeur, l'hébergeur et la propriété intellectuelle.",
   robots: { index: false, follow: false },
 };

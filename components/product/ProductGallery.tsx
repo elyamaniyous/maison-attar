@@ -17,7 +17,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
   return (
     <div className="flex flex-col gap-4">
       {/* Main image */}
-      <div className="relative aspect-[4/3] bg-warm-gray overflow-hidden rounded-sm group">
+      <div className="relative aspect-[4/3] zellige-pattern-cream overflow-hidden rounded-sm group">
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           {/* Zellige pattern placeholder */}
           <div className="w-16 h-16 opacity-20">
@@ -81,7 +81,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
             <button
               key={i}
               onClick={() => setActiveIndex(i)}
-              className={`aspect-[4/3] bg-warm-gray relative overflow-hidden transition-all duration-200 ${
+              className={`aspect-[4/3] zellige-pattern-cream relative overflow-hidden transition-all duration-200 ${
                 i === activeIndex
                   ? "ring-1 ring-ink ring-offset-1"
                   : "opacity-50 hover:opacity-80"

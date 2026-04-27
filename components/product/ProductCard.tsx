@@ -13,6 +13,25 @@ const CATEGORY_LABELS: Record<string, string> = {
   "console":         "Console",
 };
 
+// Map product slug/name to a zellige pattern variation for visual variety
+function getZelligePattern(slug: string): string {
+  const patterns = [
+    "zellige-pattern-ecaille",
+    "zellige-pattern-star",
+    "zellige-pattern-diamond",
+    "zellige-pattern-hexagon",
+    "zellige-pattern-cream",
+    "zellige-pattern-mosaic",
+  ];
+  // Deterministic hash from slug to ensure same product always has same pattern
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    hash = (hash << 5) - hash + slug.charCodeAt(i);
+    hash |= 0;
+  }
+  return patterns[Math.abs(hash) % patterns.length];
+}
+
 interface ProductCardProps {
   product: Product;
   animationDelay?: number;
@@ -41,6 +60,8 @@ export default function ProductCard({ product, animationDelay = 0, index = 0 }: 
   };
 
   const staggerDelay = animationDelay / 1000 || index * 0.08;
+  const patternClass = getZelligePattern(product.slug);
+  const isDarkPattern = patternClass.includes("star") || patternClass.includes("mosaic");
 
   return (
     <motion.article
@@ -58,43 +79,61 @@ export default function ProductCard({ product, animationDelay = 0, index = 0 }: 
     >
       <Link href={`/collection/${product.slug}`} className="block">
         {/* Image container */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-warm-gray mb-5">
+        <div className={`relative aspect-[3/4] overflow-hidden mb-5 ${patternClass}`}>
           {/* Zooming inner */}
           <motion.div
             className="absolute inset-0"
             animate={{ scale: hovered ? 1.05 : 1 }}
             transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            {/* Zellige pattern placeholder */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none">
+            {/* Vignette overlay for depth */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: isDarkPattern
+                  ? "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.45) 100%)"
+                  : "radial-gradient(ellipse at center, transparent 40%, rgba(255,255,255,0.5) 100%)",
+              }}
+            />
+
+            {/* Centered medallion + product name */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none px-6">
               <motion.div
-                className="w-14 h-14"
-                animate={{ opacity: hovered ? 0.08 : 0.12, rotate: hovered ? 45 : 0 }}
+                className="w-16 h-16"
+                animate={{ rotate: hovered ? 45 : 0 }}
                 transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
                 <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <polygon
                     points="32,4 60,20 60,44 32,60 4,44 4,20"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    fill="none"
-                  />
-                  <polygon
-                    points="32,16 48,24 48,40 32,48 16,40 16,24"
-                    stroke="currentColor"
+                    stroke={isDarkPattern ? "#C4A265" : "#1A1A1A"}
+                    strokeOpacity="0.55"
                     strokeWidth="1"
                     fill="none"
                   />
                   <polygon
-                    points="32,22 42,28 42,38 32,44 22,38 22,28"
-                    stroke="currentColor"
-                    strokeWidth="0.75"
+                    points="32,16 48,24 48,40 32,48 16,40 16,24"
+                    stroke={isDarkPattern ? "#C4A265" : "#1A1A1A"}
+                    strokeOpacity="0.45"
+                    strokeWidth="0.8"
                     fill="none"
                   />
-                  <circle cx="32" cy="32" r="4" stroke="currentColor" strokeWidth="1" fill="none" />
+                  <circle
+                    cx="32"
+                    cy="32"
+                    r="4"
+                    stroke={isDarkPattern ? "#C4A265" : "#1A1A1A"}
+                    strokeOpacity="0.55"
+                    strokeWidth="0.8"
+                    fill="none"
+                  />
                 </svg>
               </motion.div>
-              <span className="font-display text-sm italic text-ink/30">
+              <span
+                className={`font-display italic text-base text-center leading-tight ${
+                  isDarkPattern ? "text-cream/90" : "text-ink/70"
+                }`}
+              >
                 {product.name}
               </span>
             </div>

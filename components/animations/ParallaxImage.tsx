@@ -10,6 +10,7 @@ interface ParallaxImageProps {
   speed?: number
   className?: string
   placeholder?: boolean
+  placeholderPattern?: "ecaille" | "star" | "diamond" | "hexagon" | "cream" | "mosaic" | "geometric" | "terracotta"
   children?: React.ReactNode
 }
 
@@ -19,6 +20,7 @@ export default function ParallaxImage({
   speed = 0.3,
   className,
   placeholder = false,
+  placeholderPattern = "star",
   children,
 }: ParallaxImageProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -41,7 +43,20 @@ export default function ParallaxImage({
         className="absolute inset-[-15%] w-[130%] h-[130%]"
       >
         {placeholder || !src ? (
-          <div className="w-full h-full bg-warm-gray" aria-label={alt} />
+          <div
+            className={`w-full h-full zellige-pattern-${placeholderPattern} relative`}
+            aria-label={alt}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  placeholderPattern === "star" || placeholderPattern === "mosaic" || placeholderPattern === "geometric"
+                    ? "radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.5) 100%)"
+                    : "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.15) 100%)",
+              }}
+            />
+          </div>
         ) : (
           <Image
             src={src}

@@ -100,25 +100,20 @@ function HeroSection() {
       ref={containerRef}
       className="relative w-full h-[100svh] min-h-[640px] flex items-center justify-center overflow-hidden"
     >
-      {/* Background with parallax */}
+      {/* Background with parallax — zellige star pattern */}
       <motion.div
         style={{ y: springBgY, scale: bgScale }}
-        className="absolute inset-0 bg-warm-gray origin-center"
-      >
-        {/* Decorative geometric pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='80' height='80' fill='none' stroke='%231A1A1A' stroke-width='0.5'/%3E%3Cline x1='0' y1='40' x2='80' y2='40' stroke='%231A1A1A' stroke-width='0.5'/%3E%3Cline x1='40' y1='0' x2='40' y2='80' stroke='%231A1A1A' stroke-width='0.5'/%3E%3Ccircle cx='40' cy='40' r='20' stroke='%231A1A1A' stroke-width='0.5' fill='none'/%3E%3C/svg%3E")`,
-            backgroundSize: "80px 80px",
-          }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-body text-xs tracking-[0.4em] uppercase text-ink/20">
-            Fès, Maroc
-          </span>
-        </div>
-      </motion.div>
+        className="absolute inset-0 zellige-pattern-star origin-center"
+      />
+
+      {/* Subtle additional star ornaments overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.08] pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='%23C4A265' stroke-width='0.6' fill='none'%3E%3Cpolygon points='80,20 92,60 132,60 100,84 112,124 80,100 48,124 60,84 28,60 68,60'/%3E%3Ccircle cx='80' cy='80' r='40'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: "200px 200px",
+        }}
+      />
 
       {/* Dark gradient overlay */}
       <motion.div
@@ -227,22 +222,19 @@ function HeroSection() {
 
 function ManifestoSection() {
   return (
-    <section
-      className="relative bg-cream py-32 overflow-hidden"
-      style={{ minHeight: "200vh" }}
-    >
-      {/* Decorative large number in background */}
+    <section className="relative bg-cream py-32 overflow-hidden">
+      {/* Decorative large letter in background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
         <span
-          className="font-display text-warm-gray/40 font-light select-none"
-          style={{ fontSize: "clamp(12rem, 30vw, 28rem)", lineHeight: 1 }}
+          className="font-display text-warm-gray/30 font-light select-none"
+          style={{ fontSize: "clamp(10rem, 22vw, 22rem)", lineHeight: 1 }}
           aria-hidden="true"
         >
           I
         </span>
       </div>
 
-      <div className="sticky top-0 flex items-center justify-center min-h-screen px-6 py-24">
+      <div className="relative flex items-center justify-center px-6 py-12">
         <div className="max-w-4xl mx-auto text-center">
           {/* Eyebrow */}
           <ScrollReveal direction="none" delay={0}>
@@ -253,7 +245,7 @@ function ManifestoSection() {
 
           {/* Text reveal manifesto */}
           <TextReveal
-            text="A Fes, dans la medina la plus ancienne du monde, deux matieres se font face depuis des siecles. La terre cuite emaillee. Le fer forge. Maison Attar est nee du jour ou un artisan a ose les unir."
+            text="À Fès, dans la médina la plus ancienne du monde, deux matières se font face depuis des siècles. La terre cuite émaillée. Le fer forgé. Maison Attar est née du jour où un artisan a osé les unir."
             className="font-display italic text-ink leading-relaxed"
           />
 
@@ -395,7 +387,42 @@ function FeaturedProductCard({ product, index }: { product: Product; index: numb
         direction={index % 2 === 0 ? "left" : "right"}
         className="aspect-[3/4] mb-6"
       >
-        <div className="absolute inset-0 bg-warm-gray" />
+        <div
+          className={`absolute inset-0 ${
+            ["zellige-pattern-ecaille", "zellige-pattern-star", "zellige-pattern-diamond", "zellige-pattern-hexagon", "zellige-pattern-cream", "zellige-pattern-mosaic"][index % 6]
+          }`}
+        >
+          {/* Vignette */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: index % 2 === 0
+                ? "radial-gradient(ellipse at center, transparent 30%, rgba(255,255,255,0.4) 100%)"
+                : "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%)",
+            }}
+          />
+          {/* Centered name */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+            <svg
+              className="w-12 h-12 opacity-50"
+              viewBox="0 0 64 64"
+              fill="none"
+              stroke={index % 2 === 0 ? "#1A1A1A" : "#C4A265"}
+              strokeWidth="1"
+            >
+              <polygon points="32,4 60,20 60,44 32,60 4,44 4,20" />
+              <polygon points="32,16 48,24 48,40 32,48 16,40 16,24" />
+              <circle cx="32" cy="32" r="3" />
+            </svg>
+            <span
+              className={`font-display italic text-base ${
+                index % 2 === 0 ? "text-ink/60" : "text-cream/80"
+              }`}
+            >
+              {product.name}
+            </span>
+          </div>
+        </div>
       </ImageReveal>
 
       {/* Hover overlay on image area */}

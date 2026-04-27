@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "zellige traditionnel",
   ],
   openGraph: {
-    title: "Les Maalems | Maison Attar",
+    title: "Les Maalems",
     description:
       "Quatre maîtres artisans de Fès, quatre approches du zellige et de l'acier. La main derrière chaque pièce.",
     url: "https://beautiful-charm-production-7244.up.railway.app/maalems",

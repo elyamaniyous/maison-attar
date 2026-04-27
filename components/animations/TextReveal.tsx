@@ -19,7 +19,7 @@ export default function TextReveal({ text, className }: TextRevealProps) {
   const words = text.split(" ")
 
   return (
-    <div ref={containerRef} className={className}>
+    <div ref={containerRef} className={`relative ${className ?? ""}`}>
       <p className="font-display text-4xl md:text-5xl lg:text-6xl leading-tight flex flex-wrap gap-x-[0.25em]">
         {words.map((word, i) => {
           const start = i / words.length

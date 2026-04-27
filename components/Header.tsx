@@ -8,7 +8,7 @@ import { useWishlist } from "@/context/WishlistContext";
 const NAV_LINKS = [
   { label: "Collection", href: "/collection" },
   { label: "Notre Histoire", href: "/notre-histoire" },
-  { label: "Les Maalems", href: "/les-maalems" },
+  { label: "Les Maalems", href: "/maalems" },
   { label: "Journal", href: "/journal" },
   { label: "Configurateur", href: "/configurateur" },
 ];
@@ -56,14 +56,14 @@ export default function Header() {
         ].join(" ")}
         style={{ height: "var(--header-height, 80px)" }}
       >
-        <div className="max-w-[1440px] mx-auto h-full px-6 md:px-10 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto h-full px-6 md:px-10 grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-8">
           {/* Left — Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8" aria-label="Navigation principale">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 justify-self-start" aria-label="Navigation principale">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="link-underline text-ink text-[11px] tracking-[0.15em] uppercase font-body font-medium hover:text-ink-light transition-colors duration-200"
+                className="link-underline text-ink text-[10px] lg:text-[11px] tracking-[0.15em] uppercase font-body font-medium hover:text-ink-light transition-colors duration-200 whitespace-nowrap"
               >
                 {link.label}
               </Link>
@@ -89,10 +89,10 @@ export default function Header() {
           </button>
 
           {/* Center — Logo */}
-          <div className="absolute left-1/2 -translate-x-1/2">
+          <div className="flex justify-center">
             <Link
               href="/"
-              className="font-display text-[18px] md:text-[20px] tracking-[0.3em] font-medium text-ink hover:text-ink-light transition-colors duration-200 uppercase"
+              className="font-display text-[16px] md:text-[18px] lg:text-[20px] tracking-[0.25em] md:tracking-[0.3em] font-medium text-ink hover:text-ink-light transition-colors duration-200 uppercase whitespace-nowrap"
               aria-label="Maison Attar — Accueil"
             >
               MAISON ATTAR
@@ -100,7 +100,7 @@ export default function Header() {
           </div>
 
           {/* Right — Icons */}
-          <div className="flex items-center gap-1 md:gap-2">
+          <div className="flex items-center justify-end gap-1 md:gap-2">
             {/* Search */}
             <button
               className="w-10 h-10 flex items-center justify-center text-ink hover:text-gold transition-colors duration-200 rounded-full hover:bg-warm-gray/50"
@@ -111,7 +111,7 @@ export default function Header() {
 
             {/* Wishlist */}
             <Link
-              href="/wishlist"
+              href="/favoris"
               className="relative w-10 h-10 flex items-center justify-center text-ink hover:text-gold transition-colors duration-200 rounded-full hover:bg-warm-gray/50"
               aria-label={`Liste de souhaits (${wishlistCount} article${wishlistCount !== 1 ? "s" : ""})`}
             >

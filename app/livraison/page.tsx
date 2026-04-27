@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "livraison internationale zellige",
   ],
   openGraph: {
-    title: "Livraison & Emballage | Maison Attar",
+    title: "Livraison & Emballage",
     description:
       "Livraison offerte en France. Emballage sur mesure de qualité muséale. Délais 6-8 semaines après fabrication.",
     url: "https://beautiful-charm-production-7244.up.railway.app/livraison",

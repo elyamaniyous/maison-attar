@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     "XIVe siècle zellige",
   ],
   openGraph: {
-    title: "Notre Histoire | Maison Attar",
+    title: "Notre Histoire",
     description:
       "Née dans la médina de Fès, Maison Attar porte l'héritage du zellige et de la forge dans des pièces conçues pour durer.",
     url: "https://beautiful-charm-production-7244.up.railway.app/notre-histoire",

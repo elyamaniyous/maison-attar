@@ -48,7 +48,12 @@ export default function ImageReveal({
         transition={{ duration: 0.01, delay: 0.2 }}
       >
         {placeholder || !src ? (
-          <div className="w-full h-full bg-warm-gray" aria-label={alt} />
+          <div className="w-full h-full zellige-pattern-cream zellige-medallion relative" aria-label={alt}>
+            <div
+              className="absolute inset-0"
+              style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(255,255,255,0.5) 100%)" }}
+            />
+          </div>
         ) : (
           <Image
             src={src}

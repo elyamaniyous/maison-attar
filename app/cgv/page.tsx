@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Conditions Générales de Vente | Maison Attar",
+  title: "Conditions Générales de Vente",
   description: "Conditions Générales de Vente de Maison Attar SARL — pièces artisanales en zellige et acier forgé fabriquées à Fès, Maroc.",
   robots: { index: false, follow: false },
 };

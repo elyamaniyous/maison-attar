@@ -8,11 +8,11 @@ import {
 } from "@/lib/blog-data";
 
 export const metadata: Metadata = {
-  title: "Le Journal | Maison Attar",
+  title: "Le Journal — Histoires d'Atelier",
   description:
     "Histoires d'atelier, de zellige et de Fès. Articles sur l'art du zellige marocain, les maalems de Fès, la décoration contemporaine et l'entretien de vos pièces artisanales.",
   openGraph: {
-    title: "Le Journal | Maison Attar",
+    title: "Le Journal — Histoires d'Atelier",
     description:
       "Histoires d'atelier, de zellige et de Fès. Le journal de Maison Attar.",
   },

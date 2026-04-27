@@ -15,24 +15,8 @@
   --color-success: #5C8A5E;
   --color-error: #B85C5C;
 
-  --font-display: "Cormorant Garamond", "Georgia", serif;
-  --font-body: "Satoshi", "Helvetica Neue", sans-serif;
-}
-
-@font-face {
-  font-family: "Satoshi";
-  src: url("/fonts/Satoshi-Variable.woff2") format("woff2");
-  font-weight: 300 900;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Satoshi";
-  src: url("/fonts/Satoshi-VariableItalic.woff2") format("woff2");
-  font-weight: 300 900;
-  font-display: swap;
-  font-style: italic;
+  --font-display: var(--font-cormorant), "Cormorant Garamond", "Georgia", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
 }
 
 html {
@@ -172,4 +156,145 @@ body::after {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ─── Zellige Pattern Placeholders ───────────────────────────────────────────
+   Beautiful CSS-only zellige-inspired patterns for image placeholders.
+   Use these classes when no real product photo is available. */
+
+/* Fish-scale (écaille) pattern - white/cream tones */
+.zellige-pattern-ecaille {
+  background-color: #F0EDE6;
+  background-image:
+    radial-gradient(circle at 50% 100%, transparent 18px, rgba(196, 162, 101, 0.18) 18px, rgba(196, 162, 101, 0.18) 19px, transparent 19px),
+    radial-gradient(circle at 50% 100%, transparent 18px, rgba(196, 162, 101, 0.10) 18px, rgba(196, 162, 101, 0.10) 19px, transparent 19px),
+    linear-gradient(180deg, #FAFAF7 0%, #F0EDE6 100%);
+  background-size: 40px 22px, 40px 22px, 100% 100%;
+  background-position: 0 0, 20px 11px, 0 0;
+}
+
+/* Star pattern - 8-branch star */
+.zellige-pattern-star {
+  background-color: #1A2030;
+  background-image:
+    repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      rgba(196, 162, 101, 0.15) 0deg 22.5deg,
+      transparent 22.5deg 45deg
+    ),
+    radial-gradient(circle at 50% 50%, rgba(196, 162, 101, 0.25), transparent 60%),
+    linear-gradient(135deg, #1A2030 0%, #2A3548 100%);
+  background-size: 80px 80px, 100% 100%, 100% 100%;
+  background-position: center;
+}
+
+/* Diamond/checkered pattern - blue and white */
+.zellige-pattern-diamond {
+  background-color: #DCE8F0;
+  background-image:
+    linear-gradient(45deg, #4A6B8A 25%, transparent 25%),
+    linear-gradient(-45deg, #4A6B8A 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #4A6B8A 75%),
+    linear-gradient(-45deg, transparent 75%, #4A6B8A 75%);
+  background-size: 32px 32px;
+  background-position: 0 0, 0 16px, 16px -16px, -16px 0;
+}
+
+/* Hexagon honeycomb pattern */
+.zellige-pattern-hexagon {
+  background-color: #F2F0EC;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(196, 162, 101, 0.20) 1px, transparent 1px),
+    linear-gradient(60deg, transparent 47%, rgba(196, 162, 101, 0.10) 47%, rgba(196, 162, 101, 0.10) 53%, transparent 53%),
+    linear-gradient(-60deg, transparent 47%, rgba(196, 162, 101, 0.10) 47%, rgba(196, 162, 101, 0.10) 53%, transparent 53%),
+    linear-gradient(0deg, transparent 47%, rgba(196, 162, 101, 0.10) 47%, rgba(196, 162, 101, 0.10) 53%, transparent 53%);
+  background-size: 36px 60px;
+}
+
+/* Geometric grid - olive green tones */
+.zellige-pattern-geometric {
+  background-color: #4A5A3A;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.06) 0 1px,
+      transparent 1px 24px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.06) 0 1px,
+      transparent 1px 24px
+    ),
+    radial-gradient(circle at 50% 50%, rgba(196, 162, 101, 0.2), transparent 70%);
+}
+
+/* Terracotta warm pattern */
+.zellige-pattern-terracotta {
+  background-color: #B5896A;
+  background-image:
+    repeating-radial-gradient(circle at 0 0, transparent 0, rgba(74, 45, 30, 0.15) 8px, transparent 16px),
+    repeating-radial-gradient(circle at 100% 100%, transparent 0, rgba(74, 45, 30, 0.15) 8px, transparent 16px),
+    linear-gradient(135deg, #C9986F 0%, #A67852 100%);
+}
+
+/* Soft cream pattern - elegant default */
+.zellige-pattern-cream {
+  background-color: #F0EDE6;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(196, 162, 101, 0.06) 0 1px,
+      transparent 1px 12px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(196, 162, 101, 0.06) 0 1px,
+      transparent 1px 12px
+    ),
+    linear-gradient(180deg, #FAFAF7 0%, #ECE8E0 100%);
+}
+
+/* Mosaic - colorful traditional */
+.zellige-pattern-mosaic {
+  background-color: #2A3548;
+  background-image:
+    conic-gradient(from 0deg at 25% 25%, #C4A265 0deg 90deg, transparent 90deg 360deg),
+    conic-gradient(from 90deg at 75% 25%, #5C8A8A 0deg 90deg, transparent 90deg 360deg),
+    conic-gradient(from 180deg at 75% 75%, #B85C5C 0deg 90deg, transparent 90deg 360deg),
+    conic-gradient(from 270deg at 25% 75%, #5C7A4A 0deg 90deg, transparent 90deg 360deg);
+  background-size: 60px 60px;
+  opacity: 0.85;
+}
+
+/* Subtle texture overlay - adds zellige feel to any background */
+.zellige-texture-overlay {
+  position: relative;
+}
+.zellige-texture-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg 30deg,
+      rgba(196, 162, 101, 0.04) 30deg 60deg
+    );
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* Center medallion for product cards */
+.zellige-medallion::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  transform: translate(-50%, -50%);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><g fill='none' stroke='%23C4A265' stroke-width='0.7' opacity='0.45'><circle cx='40' cy='40' r='28'/><polygon points='40,12 52,28 68,40 52,52 40,68 28,52 12,40 28,28'/><polygon points='40,20 48,32 60,40 48,48 40,60 32,48 20,40 32,32'/><circle cx='40' cy='40' r='6'/></g></svg>");
+  background-size: contain;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }

@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: {
-    default: "Le Journal | Maison Attar",
-    template: "%s | Maison Attar Journal",
-  },
+  title: "Le Journal — Histoires d'Atelier",
   description:
     "Histoires d'atelier, de zellige et de Fès. Le journal de Maison Attar explore l'art du zellige marocain, l'artisanat des maalems de Fès, la décoration contemporaine et le patrimoine de la médina.",
   keywords: [

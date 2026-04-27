@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     "zellige marocain contact",
   ],
   openGraph: {
-    title: "Contact | Maison Attar",
+    title: "Contact",
     description:
       "Parlez-nous de votre projet. Nous répondons sous 24h ouvrées.",
     url: "https://beautiful-charm-production-7244.up.railway.app/contact",

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Politique de Confidentialité | Maison Attar",
+  title: "Politique de Confidentialité",
   description: "Politique de confidentialité et protection des données personnelles — Maison Attar SARL, conformité RGPD.",
   robots: { index: false, follow: false },
 };

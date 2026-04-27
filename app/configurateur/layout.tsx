@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     "commande artisanat Fès",
   ],
   openGraph: {
-    title: "Configurateur de Table en Zellige | Maison Attar",
+    title: "Configurateur de Table en Zellige",
     description:
       "Créez votre table en zellige marocain sur mesure. Zellige, forme, dimensions, base — votre pièce unique, créée à Fès.",
     url: "https://beautiful-charm-production-7244.up.railway.app/configurateur",

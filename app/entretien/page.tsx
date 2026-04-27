@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     "guide entretien table zellige",
   ],
   openGraph: {
-    title: "Entretien & Patine | Maison Attar",
+    title: "Entretien & Patine",
     description:
       "Guide d'entretien complet pour votre table en zellige marocain et acier forgé. Conseils de nos maalems pour une pièce qui dure des décennies.",
     url: "https://beautiful-charm-production-7244.up.railway.app/entretien",

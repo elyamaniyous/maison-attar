@@ -28,7 +28,7 @@ export async function generateMetadata({
   const article = getBlogBySlug(slug);
 
   if (!article) {
-    return { title: "Article introuvable | Maison Attar" };
+    return { title: "Article introuvable" };
   }
 
   return {
