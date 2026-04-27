@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  blogArticles,
-  getBlogBySlug,
-  getBlogsByCategory,
-  categoryLabels,
-  type BlogArticle,
-} from "@/lib/blog-data";
+import { getArticles, getArticleBySlug } from "@/db/helpers";
+import { categoryLabels, type BlogArticle } from "@/lib/blog-data";
 
 // ─── Static params ────────────────────────────────────────────────────────────
 
 export async function generateStaticParams() {
-  return blogArticles.map((article) => ({
+  const articles = await getArticles();
+  return articles.map((article) => ({
     slug: article.slug,
   }));
 }
@@ -25,7 +21,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const article = getBlogBySlug(slug);
+  const article = await getArticleBySlug(slug);
 
   if (!article) {
     return { title: "Article introuvable" };
@@ -179,20 +175,23 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = getBlogBySlug(slug);
+  const [article, allArticles] = await Promise.all([
+    getArticleBySlug(slug),
+    getArticles(),
+  ]);
 
   if (!article) {
     notFound();
   }
 
-  const related = getBlogsByCategory(article.category)
-    .filter((a) => a.id !== article.id)
+  const related = allArticles
+    .filter((a) => a.category === article.category && a.id !== article.id)
     .slice(0, 2);
 
   // Fallback: pick from all articles if not enough in same category
   const otherRelated =
     related.length < 2
-      ? blogArticles
+      ? allArticles
           .filter(
             (a) =>
               a.id !== article.id && !related.find((r) => r.id === a.id)

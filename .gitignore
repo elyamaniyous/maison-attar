@@ -42,3 +42,7 @@ next-env.d.ts
 .playwright-mcp/
 audit-*.jpeg
 verify-*.jpeg
+
+# Local CMS data
+data/
+public/uploads/

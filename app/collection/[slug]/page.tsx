@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { products, maalems } from "@/lib/data";
+import { getProducts, getProductBySlug, getProductsByCategory, getMaalemById } from "@/db/helpers";
 import type { Maalem } from "@/lib/types";
 import ProductGallery from "@/components/product/ProductGallery";
 import AddToCartPanel from "@/components/product/AddToCartPanel";
@@ -23,6 +23,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 // ─── Static params ──────────────────────────────────────────────────────────
 
 export async function generateStaticParams() {
+  const products = await getProducts();
   return products.map((p) => ({ slug: p.slug }));
 }
 
@@ -34,7 +35,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = products.find((p) => p.slug === slug);
+  const product = await getProductBySlug(slug);
   if (!product) return {};
   const BASE_URL = "https://beautiful-charm-production-7244.up.railway.app";
   return {
@@ -93,15 +94,19 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = products.find((p) => p.slug === slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  // Get full maalem data
-  const maalem: Maalem | undefined = maalems.find((m) => m.id === product.maalem.id);
+  // Get full maalem data and related products in parallel
+  const [maalem, relatedAll]: [Maalem | undefined, Awaited<ReturnType<typeof getProductsByCategory>>] =
+    await Promise.all([
+      getMaalemById(product.maalem.id),
+      getProductsByCategory(product.category),
+    ]);
 
   // Related products: same category, exclude current
-  const related = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
+  const related = relatedAll
+    .filter((p) => p.id !== product.id)
     .slice(0, 4);
 
   const estimatedDelivery = getEstimatedDelivery();

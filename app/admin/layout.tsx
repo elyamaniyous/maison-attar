@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cmsApi, ApiError } from "@/lib/admin-api";
 
 type NavLink = {
   href: string;
@@ -101,38 +102,24 @@ function AuthGate({ onAuth }: { onAuth: (user: UserInfo) => void }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/cms/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const user: UserInfo = {
-          name: data.name ?? email.split("@")[0],
-          email: data.email ?? email,
-          role: data.role ?? "admin",
-        };
-        localStorage.setItem("admin_auth", "true");
-        localStorage.setItem("admin_user", JSON.stringify(user));
-        onAuth(user);
-        return;
-      }
-    } catch {
-      // API not available — fall through to password check
-    }
-
-    // Fallback: classic password
-    if (password === "attar2024") {
-      const user: UserInfo = { name: "Administrateur", email, role: "admin" };
-      localStorage.setItem("admin_auth", "true");
+      const data = await cmsApi.auth.login(email, password);
+      const user: UserInfo = {
+        name: data.user.name ?? email.split("@")[0],
+        email: data.user.email ?? email,
+        role: data.user.role ?? "admin",
+      };
       localStorage.setItem("admin_user", JSON.stringify(user));
       onAuth(user);
-    } else {
-      setError("Identifiants incorrects");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setError("Identifiants incorrects");
+      } else {
+        setError("Erreur de connexion. Veuillez réessayer.");
+      }
       setPassword("");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -193,9 +180,6 @@ function AuthGate({ onAuth }: { onAuth: (user: UserInfo) => void }) {
           </button>
         </form>
 
-        <p className="text-center text-xs text-[#4A4A4A] mt-6 font-body">
-          Demo: <span className="text-[#8A8A8A]">attar2024</span>
-        </p>
       </div>
     </div>
   );
@@ -209,12 +193,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [contenuOpen, setContenuOpen] = useState(false);
 
   useEffect(() => {
-    const auth = localStorage.getItem("admin_auth");
-    const storedUser = localStorage.getItem("admin_user");
-    setAuthenticated(auth === "true");
-    if (storedUser) {
-      try { setUser(JSON.parse(storedUser)); } catch { /* ignore */ }
+    let cancelled = false;
+    async function checkAuth() {
+      try {
+        const me = await cmsApi.auth.me();
+        if (cancelled) return;
+        const userInfo: UserInfo = { name: me.name, email: me.email, role: me.role };
+        localStorage.setItem("admin_user", JSON.stringify(userInfo));
+        setUser(userInfo);
+        setAuthenticated(true);
+      } catch {
+        if (cancelled) return;
+        // Try to restore from localStorage as fallback (cookie may still be valid)
+        const storedUser = localStorage.getItem("admin_user");
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+            setAuthenticated(true);
+            return;
+          } catch { /* ignore */ }
+        }
+        setAuthenticated(false);
+      }
     }
+    checkAuth();
+    return () => { cancelled = true; };
   }, []);
 
   // Auto-expand Contenu when on a contenu sub-route
@@ -400,8 +403,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
 
           <button
-            onClick={() => {
-              localStorage.removeItem("admin_auth");
+            onClick={async () => {
+              try {
+                await cmsApi.auth.logout();
+              } catch { /* ignore */ }
               localStorage.removeItem("admin_user");
               setAuthenticated(false);
               setUser(null);

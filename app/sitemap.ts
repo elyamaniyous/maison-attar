@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next'
-import { products, maalems } from '@/lib/data'
+import { getProducts, getMaalems } from '@/db/helpers'
 
 const BASE_URL = 'https://beautiful-charm-production-7244.up.railway.app'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
+  const [products, maalems] = await Promise.all([getProducts(), getMaalems()])
 
   // ── Static pages ────────────────────────────────────────────────────────────
 

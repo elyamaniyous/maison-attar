@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { maalems } from "@/lib/data";
+import { getMaalems } from "@/db/helpers";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Les Maalems — Maîtres Artisans Zelligeurs de Fès",
@@ -27,7 +29,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MaalemsPage() {
+export default async function MaalemsPage() {
+  const maalems = await getMaalems();
   return (
     <div className="bg-cream text-ink">
 

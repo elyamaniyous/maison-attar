@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { products as initialProducts, maalems } from "@/lib/data";
-import type { Product, ProductCategory } from "@/lib/types";
+import { cmsApi, ApiError } from "@/lib/admin-api";
+import MultiImageUploader from "@/components/admin/MultiImageUploader";
+import type { Product, ProductCategory, Maalem } from "@/lib/types";
 
 const CATEGORIES: { value: ProductCategory; label: string }[] = [
   { value: "table-basse", label: "Table basse" },
@@ -19,19 +20,76 @@ function slugify(str: string) {
   return str
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
 
+function blankProduct(): Omit<Product, "id"> & { id?: string } {
+  return {
+    name: "",
+    slug: "",
+    description: "",
+    longDescription: "",
+    price: 0,
+    images: [],
+    category: "table-basse",
+    dimensions: { width: 0, height: 0, depth: 0, weight: 0 },
+    materials: { zellige: "", base: "" },
+    maalem: { id: "", name: "", image: "", bio: "" },
+    fabricationHours: 0,
+    availableConfigurations: { zelliges: [], sizes: [], bases: [] },
+    inStock: true,
+    featured: false,
+  };
+}
+
 export default function ProduitsContenuPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [editing, setEditing] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [maalems, setMaalems] = useState<Maalem[]>([]);
+  const [editing, setEditing] = useState<(Omit<Product, "id"> & { id?: string }) | null>(null);
+  const [isNew, setIsNew] = useState(false);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | "">("");
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [prods, maalems] = await Promise.all([
+          cmsApi.products.list(),
+          cmsApi.maalems.list(),
+        ]);
+        if (!cancelled) {
+          setProducts(prods);
+          setMaalems(maalems);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : "Erreur de chargement");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Auto-generate slug from name
+  useEffect(() => {
+    if (!editing || slugManuallyEdited || isNew === false) return;
+    setEditing((prev) => prev ? { ...prev, slug: slugify(prev.name) } : null);
+  }, [editing?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = products.filter((p) => {
     const matchSearch =
@@ -42,20 +100,26 @@ export default function ProduitsContenuPage() {
     return matchSearch && matchCat;
   });
 
-  useEffect(() => {
-    if (!editing || slugManuallyEdited) return;
-    setEditing((prev) => prev ? { ...prev, slug: slugify(prev.name) } : null);
-  }, [editing?.name]); // eslint-disable-line react-hooks/exhaustive-deps
-
   function openEditor(product: Product) {
     setEditing(JSON.parse(JSON.stringify(product)));
+    setIsNew(false);
     setSlugManuallyEdited(false);
     setSaved(false);
+    setError(null);
+  }
+
+  function openNew() {
+    setEditing(blankProduct());
+    setIsNew(true);
+    setSlugManuallyEdited(false);
+    setSaved(false);
+    setError(null);
   }
 
   function closeEditor() {
     setEditing(null);
     setSaved(false);
+    setError(null);
   }
 
   function updateField<K extends keyof Product>(key: K, value: Product[K]) {
@@ -80,46 +144,55 @@ export default function ProduitsContenuPage() {
     setEditing({ ...editing, availableConfigurations: { ...editing.availableConfigurations, [group]: next } });
   }
 
-  function updateImage(index: number, value: string) {
+  function selectMaalem(maalemId: string) {
     if (!editing) return;
-    const imgs = [...editing.images];
-    imgs[index] = value;
-    updateField("images", imgs);
-  }
-
-  function addImage() {
-    if (!editing) return;
-    updateField("images", [...editing.images, ""]);
-  }
-
-  function removeImage(index: number) {
-    if (!editing) return;
-    updateField("images", editing.images.filter((_, i) => i !== index));
+    const m = maalems.find((x) => x.id === maalemId);
+    if (m) {
+      setEditing({ ...editing, maalem: { id: m.id, name: m.name, image: m.image, bio: m.bio } });
+    }
   }
 
   async function save() {
     if (!editing) return;
     setSaving(true);
+    setError(null);
     try {
-      await fetch(`/api/cms/products/${editing.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editing),
-      });
-    } catch { /* demo fallback */ }
-    setProducts((prev) => prev.map((p) => (p.id === editing.id ? editing : p)));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+      if (isNew) {
+        const created = await cmsApi.products.create(editing as Omit<Product, "id">);
+        setProducts((prev) => [created, ...prev]);
+      } else if (editing.id) {
+        const updated = await cmsApi.products.update(editing.id, editing as Product);
+        setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      }
+      setSaved(true);
+      setTimeout(() => { setSaved(false); closeEditor(); }, 1200);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Erreur lors de la sauvegarde");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteProduct(id: string) {
+    setDeleting(id);
+    setError(null);
+    try {
+      await cmsApi.products.delete(id);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setDeleteConfirm(null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Erreur lors de la suppression");
+    } finally {
+      setDeleting(null);
+    }
   }
 
   // ── Editor view ────────────────────────────────────────────────────────────
   if (editing) {
-    const maalem = maalems.find((m) => m.id === editing.maalem.id);
     return (
       <div className="max-w-3xl space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <button onClick={closeEditor} className="flex items-center gap-1.5 text-[#8A8A8A] hover:text-white transition-colors text-sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -127,7 +200,9 @@ export default function ProduitsContenuPage() {
             Retour
           </button>
           <div className="h-4 w-px bg-[#262626]" />
-          <h2 className="text-white text-xl font-display tracking-wide">{editing.name}</h2>
+          <h2 className="text-white text-xl font-display tracking-wide">
+            {isNew ? "Nouveau produit" : editing.name}
+          </h2>
           <div className="ml-auto flex items-center gap-3">
             {saved && (
               <span className="text-emerald-400 text-xs flex items-center gap-1">
@@ -147,6 +222,10 @@ export default function ProduitsContenuPage() {
             </button>
           </div>
         </div>
+
+        {error && (
+          <div className="bg-[#B85C5C]/10 border border-[#B85C5C]/30 rounded p-3 text-[#B85C5C] text-sm">{error}</div>
+        )}
 
         <div className="space-y-4">
           {/* Identité */}
@@ -186,37 +265,12 @@ export default function ProduitsContenuPage() {
 
           {/* Images */}
           <Section title="Images">
-            <div className="space-y-2">
-              {editing.images.map((img, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="text-[#4A4A4A] text-xs w-4">{i + 1}</span>
-                  {img && (
-                    <div className="w-10 h-10 rounded bg-[#262626] overflow-hidden shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <input
-                    type="text"
-                    value={img}
-                    onChange={(e) => updateImage(i, e.target.value)}
-                    placeholder="/images/products/..."
-                    className={`${inputCls} flex-1`}
-                  />
-                  <button onClick={() => removeImage(i)} className="shrink-0 text-[#4A4A4A] hover:text-[#B85C5C] transition-colors">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-              <button onClick={addImage} className="flex items-center gap-1.5 text-xs text-[#8A8A8A] hover:text-[#C4A265] transition-colors mt-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                Ajouter une image
-              </button>
-            </div>
+            <MultiImageUploader
+              value={editing.images}
+              onChange={(urls) => updateField("images", urls)}
+              category="products"
+              max={6}
+            />
           </Section>
 
           {/* Dimensions */}
@@ -245,12 +299,10 @@ export default function ProduitsContenuPage() {
             <Field label="Maalem">
               <select
                 value={editing.maalem.id}
-                onChange={(e) => {
-                  const m = maalems.find((x) => x.id === e.target.value);
-                  if (m) updateField("maalem", { id: m.id, name: m.name, image: m.image, bio: m.bio });
-                }}
+                onChange={(e) => selectMaalem(e.target.value)}
                 className={inputCls}
               >
+                <option value="">— Sélectionner un maalem —</option>
                 {maalems.map((m) => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
@@ -323,15 +375,24 @@ export default function ProduitsContenuPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-white text-2xl font-display tracking-wide">Produits</h2>
-          <p className="text-[#4A4A4A] text-sm mt-0.5">{products.length} références dans le catalogue</p>
+          <p className="text-[#4A4A4A] text-sm mt-0.5">
+            {loading ? "Chargement…" : `${products.length} références dans le catalogue`}
+          </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#C4A265] hover:bg-[#D4B87A] text-[#0F0F0F] text-sm font-medium rounded transition-colors">
+        <button
+          onClick={openNew}
+          className="flex items-center gap-2 px-4 py-2 bg-[#C4A265] hover:bg-[#D4B87A] text-[#0F0F0F] text-sm font-medium rounded transition-colors"
+        >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
           Nouveau produit
         </button>
       </div>
+
+      {error && (
+        <div className="bg-[#B85C5C]/10 border border-[#B85C5C]/30 rounded p-3 text-[#B85C5C] text-sm">{error}</div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-3">
@@ -357,72 +418,101 @@ export default function ProduitsContenuPage() {
         </select>
       </div>
 
-      <div className="bg-[#1A1A1A] border border-[#262626] rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[#262626]">
-              {["Produit", "Catégorie", "Prix", "Stock", "Mise en avant", ""].map((h) => (
-                <th key={h} className="px-4 py-3 text-left text-[10px] text-[#4A4A4A] uppercase tracking-widest font-medium">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((product) => (
-              <tr key={product.id} className="border-b border-[#1F1F1F] hover:bg-white/[0.02] transition-colors">
-                <td className="px-4 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-[#262626] shrink-0 overflow-hidden">
-                      {product.images[0] && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+      {loading ? (
+        <div className="flex items-center gap-3 text-[#8A8A8A] text-sm py-10">
+          <div className="w-5 h-5 border-2 border-[#C4A265]/30 border-t-[#C4A265] rounded-full animate-spin" />
+          Chargement des produits…
+        </div>
+      ) : (
+        <div className="bg-[#1A1A1A] border border-[#262626] rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-[#262626]">
+                {["Produit", "Catégorie", "Prix", "Stock", "Mise en avant", ""].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-[10px] text-[#4A4A4A] uppercase tracking-widest font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((product) => (
+                <tr key={product.id} className="border-b border-[#1F1F1F] hover:bg-white/[0.02] transition-colors">
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded bg-[#262626] shrink-0 overflow-hidden">
+                        {product.images[0] && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-medium">{product.name}</p>
+                        <p className="text-[#4A4A4A] text-xs">{product.slug}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <span className="text-[#8A8A8A] text-xs capitalize">{product.category.replace(/-/g, " ")}</span>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <span className="text-white text-sm font-mono">{product.price.toLocaleString("fr-FR")} €</span>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs border ${
+                      product.inStock
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        : "bg-[#B85C5C]/10 text-[#B85C5C] border-[#B85C5C]/20"
+                    }`}>
+                      {product.inStock ? "En stock" : "Épuisé"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <span className={`text-xs ${product.featured ? "text-[#C4A265]" : "text-[#4A4A4A]"}`}>
+                      {product.featured ? "✦ Mis en avant" : "—"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-2 justify-end">
+                      <button
+                        onClick={() => openEditor(product)}
+                        className="text-xs text-[#8A8A8A] hover:text-[#C4A265] border border-[#262626] hover:border-[#C4A265] rounded px-3 py-1.5 transition-colors"
+                      >
+                        Modifier
+                      </button>
+                      {deleteConfirm === product.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-[#8A8A8A]">Confirmer ?</span>
+                          <button
+                            onClick={() => deleteProduct(product.id)}
+                            disabled={deleting === product.id}
+                            className="text-xs text-[#B85C5C] hover:text-red-400 transition-colors disabled:opacity-60"
+                          >
+                            {deleting === product.id ? "…" : "Oui"}
+                          </button>
+                          <button onClick={() => setDeleteConfirm(null)} className="text-xs text-[#4A4A4A] hover:text-white transition-colors">Non</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setDeleteConfirm(product.id)}
+                          className="text-xs text-[#4A4A4A] hover:text-[#B85C5C] border border-[#262626] hover:border-[#B85C5C]/30 rounded px-3 py-1.5 transition-colors"
+                        >
+                          Supprimer
+                        </button>
                       )}
                     </div>
-                    <div>
-                      <p className="text-white text-sm font-medium">{product.name}</p>
-                      <p className="text-[#4A4A4A] text-xs">{product.slug}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3.5">
-                  <span className="text-[#8A8A8A] text-xs capitalize">{product.category.replace(/-/g, " ")}</span>
-                </td>
-                <td className="px-4 py-3.5">
-                  <span className="text-white text-sm font-mono">{product.price.toLocaleString("fr-FR")} €</span>
-                </td>
-                <td className="px-4 py-3.5">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs border ${
-                    product.inStock
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-[#B85C5C]/10 text-[#B85C5C] border-[#B85C5C]/20"
-                  }`}>
-                    {product.inStock ? "En stock" : "Épuisé"}
-                  </span>
-                </td>
-                <td className="px-4 py-3.5">
-                  <span className={`text-xs ${product.featured ? "text-[#C4A265]" : "text-[#4A4A4A]"}`}>
-                    {product.featured ? "✦ Mis en avant" : "—"}
-                  </span>
-                </td>
-                <td className="px-4 py-3.5">
-                  <button
-                    onClick={() => openEditor(product)}
-                    className="text-xs text-[#8A8A8A] hover:text-[#C4A265] border border-[#262626] hover:border-[#C4A265] rounded px-3 py-1.5 transition-colors"
-                  >
-                    Modifier
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-[#4A4A4A] text-sm">
-                  Aucun produit trouvé
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center text-[#4A4A4A] text-sm">
+                    Aucun produit trouvé
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -472,6 +562,7 @@ function ConfigGroup({
           return (
             <button
               key={opt}
+              type="button"
               onClick={() => onToggle(opt)}
               className={`px-3 py-1 rounded text-xs border transition-colors ${
                 active

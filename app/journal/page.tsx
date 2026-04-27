@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  blogArticles,
-  getFeaturedArticles,
-  categoryLabels,
-  type BlogArticle,
-} from "@/lib/blog-data";
+import { getArticles } from "@/db/helpers";
+import { categoryLabels, type BlogArticle } from "@/lib/blog-data";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Le Journal — Histoires d'Atelier",
@@ -107,9 +105,10 @@ function ArticleCard({ article }: { article: BlogArticle }) {
   );
 }
 
-export default function JournalPage() {
-  const featured = getFeaturedArticles()[0] ?? blogArticles[0];
-  const rest = blogArticles.filter((a) => a.id !== featured.id);
+export default async function JournalPage() {
+  const blogArticles = await getArticles();
+  const featured = blogArticles.find((a) => a.featured) ?? blogArticles[0];
+  const rest = blogArticles.filter((a) => a.id !== featured?.id);
 
   return (
     <div className="bg-cream text-ink min-h-screen">
@@ -134,6 +133,7 @@ export default function JournalPage() {
       </section>
 
       {/* ── Featured Article ───────────────────────────────────────────────── */}
+      {featured && (
       <section className="py-16 px-6 md:px-12 lg:px-20 border-b border-border">
         <div className="max-w-screen-xl mx-auto">
           <p className="text-[10px] uppercase tracking-[0.2em] text-ink-muted font-body mb-8">
@@ -207,6 +207,7 @@ export default function JournalPage() {
           </Link>
         </div>
       </section>
+      )}
 
       {/* ── Category Pills ─────────────────────────────────────────────────── */}
       <section className="py-10 px-6 md:px-12 lg:px-20 border-b border-border">

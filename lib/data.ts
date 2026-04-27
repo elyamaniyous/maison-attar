@@ -605,46 +605,10 @@ export const mockFabricationUpdates: FabricationUpdate[] = [
   },
 ];
 
-// ─── Helper Functions ──────────────────────────────────────────────────────────
-
-/**
- * Returns a single product by its slug, or undefined if not found.
- */
-export function getProductBySlug(slug: string): Product | undefined {
-  return products.find((p) => p.slug === slug);
-}
-
-/**
- * Returns all products belonging to a given category.
- */
-export function getProductsByCategory(category: string): Product[] {
-  return products.filter((p) => p.category === category);
-}
-
-/**
- * Returns all products marked as featured.
- */
-export function getFeaturedProducts(): Product[] {
-  return products.filter((p) => p.featured);
-}
-
-/**
- * Returns a Maalem by their id, or undefined if not found.
- */
-export function getMaalemById(id: string): Maalem | undefined {
-  return maalems.find((m) => m.id === id);
-}
-
-/**
- * Returns a Maalem by their slug, or undefined if not found.
- */
-export function getMaalemBySlug(slug: string): Maalem | undefined {
-  return maalems.find((m) => m.slug === slug);
-}
-
-/**
- * Returns all fabrication updates for a given order id.
- */
-export function getFabricationUpdates(orderId: string): FabricationUpdate[] {
-  return mockFabricationUpdates.filter((u) => u.orderId === orderId);
-}
+// ─── Note ──────────────────────────────────────────────────────────────────────
+// Sync getter functions have been removed. Use the async helpers in @/db/helpers
+// instead (getProductBySlug, getProductsByCategory, getFeaturedProducts,
+// getMaalemById, getMaalemBySlug, getMaalems, getProducts).
+//
+// This file retains only raw mock data used by the seed script (db/seed.ts)
+// and the order tracker demo (mockOrder, mockFabricationUpdates).

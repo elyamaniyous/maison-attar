@@ -319,19 +319,13 @@ Si malgré toutes les précautions un fragment de zellige se détache ou se fiss
   },
 ];
 
-export function getBlogBySlug(slug: string): BlogArticle | undefined {
-  return blogArticles.find((article) => article.slug === slug);
-}
-
-export function getBlogsByCategory(
-  category: BlogArticle["category"]
-): BlogArticle[] {
-  return blogArticles.filter((article) => article.category === category);
-}
-
-export function getFeaturedArticles(): BlogArticle[] {
-  return blogArticles.filter((article) => article.featured);
-}
+// ─── Note ──────────────────────────────────────────────────────────────────────
+// Sync getter functions (getBlogBySlug, getBlogsByCategory, getFeaturedArticles)
+// have been removed. Use the async helpers in @/db/helpers instead
+// (getArticleBySlug, getArticles).
+//
+// This file retains the raw blogArticles array (used by db/seed.ts) and
+// the categoryLabels record (used by public pages).
 
 export const categoryLabels: Record<BlogArticle["category"], string> = {
   artisanat: "Artisanat",

@@ -1,63 +1,84 @@
 "use client";
 
-import { useState } from "react";
-
-type SiteSettings = {
-  siteName: string;
-  tagline: string;
-  description: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
-  instagram: string;
-  pinterest: string;
-  currency: string;
-  freeShippingThreshold: number;
-  fabricationWeeks: { min: number; max: number };
-};
-
-const DEFAULT_SETTINGS: SiteSettings = {
-  siteName: "Maison Attar",
-  tagline: "L'art du zellige marocain pour l'intérieur contemporain",
-  description: "Maison Attar crée des tables en zellige faites à la main par des maîtres artisans de Fès.",
-  contactEmail: "bonjour@maison-attar.com",
-  contactPhone: "+33 1 23 45 67 89",
-  address: "Paris, France",
-  instagram: "https://instagram.com/maisonattar",
-  pinterest: "https://pinterest.com/maisonattar",
-  currency: "EUR",
-  freeShippingThreshold: 2000,
-  fabricationWeeks: { min: 8, max: 12 },
-};
+import { useState, useEffect } from "react";
+import { cmsApi, ApiError } from "@/lib/admin-api";
+import type { SiteSettings } from "@/lib/cms";
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await cmsApi.settings.get();
+        if (!cancelled) setSettings(data);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof ApiError ? err.message : "Erreur de chargement des paramètres");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
   function update<K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    if (!settings) return;
+    setSettings((prev) => prev ? { ...prev, [key]: value } : prev);
     setSaved(false);
   }
 
   async function save() {
+    if (!settings) return;
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("/api/cms/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
-      if (!res.ok) throw new Error("Erreur serveur");
-    } catch {
-      // Demo mode — show success anyway
-    } finally {
-      setSaving(false);
+      const updated = await cmsApi.settings.update(settings);
+      setSettings(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Erreur lors de la sauvegarde");
+    } finally {
+      setSaving(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-3 text-[#8A8A8A] text-sm py-10">
+        <div className="w-5 h-5 border-2 border-[#C4A265]/30 border-t-[#C4A265] rounded-full animate-spin" />
+        Chargement des paramètres…
+      </div>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <div className="bg-[#B85C5C]/10 border border-[#B85C5C]/30 rounded p-4 text-[#B85C5C] text-sm">
+        {error ?? "Impossible de charger les paramètres."}
+      </div>
+    );
+  }
+
+  // Derive fabricationWeeks min/max from string or fallback
+  // The SiteSettings type stores fabricationWeeks as a string like "6 à 10 semaines"
+  // We expose two number fields parsed from it for convenience
+  const weekMatch = typeof settings.fabricationWeeks === "string"
+    ? settings.fabricationWeeks.match(/(\d+)[^\d]+(\d+)/)
+    : null;
+  const fabMin = weekMatch ? Number(weekMatch[1]) : 8;
+  const fabMax = weekMatch ? Number(weekMatch[2]) : 12;
+
+  function updateFabWeeks(min: number, max: number) {
+    update("fabricationWeeks", `${min} à ${max} semaines`);
   }
 
   return (
@@ -87,6 +108,10 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-[#B85C5C]/10 border border-[#B85C5C]/30 rounded p-3 text-[#B85C5C] text-sm">{error}</div>
+      )}
 
       <div className="space-y-4">
         {/* Site identity */}
@@ -175,34 +200,30 @@ export default function SettingsPage() {
                 <label className="block text-xs text-[#4A4A4A] mb-1">Minimum</label>
                 <input
                   type="number"
-                  value={settings.fabricationWeeks.min}
-                  onChange={(e) => update("fabricationWeeks", { ...settings.fabricationWeeks, min: Number(e.target.value) })}
+                  value={fabMin}
+                  onChange={(e) => updateFabWeeks(Number(e.target.value), fabMax)}
                   className={inputCls}
                   min={1}
-                  max={settings.fabricationWeeks.max}
+                  max={fabMax}
                 />
               </div>
               <div>
                 <label className="block text-xs text-[#4A4A4A] mb-1">Maximum</label>
                 <input
                   type="number"
-                  value={settings.fabricationWeeks.max}
-                  onChange={(e) => update("fabricationWeeks", { ...settings.fabricationWeeks, max: Number(e.target.value) })}
+                  value={fabMax}
+                  onChange={(e) => updateFabWeeks(fabMin, Number(e.target.value))}
                   className={inputCls}
-                  min={settings.fabricationWeeks.min}
+                  min={fabMin}
                 />
               </div>
             </div>
             <p className="text-[#4A4A4A] text-xs mt-1.5">
-              Affiché comme : « {settings.fabricationWeeks.min} à {settings.fabricationWeeks.max} semaines »
+              Affiché comme : « {fabMin} à {fabMax} semaines »
             </p>
           </div>
         </Panel>
       </div>
-
-      {error && (
-        <p className="text-[#B85C5C] text-sm">{error}</p>
-      )}
 
       <div className="flex justify-end pb-6">
         <button

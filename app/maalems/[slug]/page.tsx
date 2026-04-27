@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { maalems, products } from "@/lib/data";
+import { getMaalems, getMaalemBySlug, getProducts } from "@/db/helpers";
 import type { Maalem, Product } from "@/lib/types";
 
 // ─── Static params ────────────────────────────────────────────────────────────
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const maalems = await getMaalems();
   return maalems.map((m) => ({ slug: m.slug }));
 }
 
@@ -18,7 +19,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const maalem = maalems.find((m) => m.slug === slug);
+  const maalem = await getMaalemBySlug(slug);
   if (!maalem) return {};
   const BASE_URL = "https://beautiful-charm-production-7244.up.railway.app";
   const desc = `${maalem.name} — ${maalem.specialty}. ${maalem.yearsExperience} ans de métier, ${maalem.piecesCreated} pièces créées à Fès. Maalem Maison Attar.`;
@@ -121,17 +122,18 @@ export default async function MaalemProfilePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const maalem: Maalem | undefined = maalems.find((m) => m.slug === slug);
+  const [maalem, allMaalems, allProducts]: [Maalem | undefined, Maalem[], Product[]] =
+    await Promise.all([getMaalemBySlug(slug), getMaalems(), getProducts()]);
 
   if (!maalem) {
     notFound();
   }
 
   // Products by this maalem
-  const maalemProducts = products.filter((p) => p.maalem.id === maalem.id);
+  const maalemProducts = allProducts.filter((p) => p.maalem.id === maalem.id);
 
   // Index for alternating styles
-  const maalemIndex = maalems.findIndex((m) => m.id === maalem.id);
+  const maalemIndex = allMaalems.findIndex((m) => m.id === maalem.id);
 
   // Bio paragraphs
   const bioParagraphs = maalem.bio.split(". ").reduce<string[]>((acc, sentence, i) => {
@@ -434,7 +436,7 @@ export default async function MaalemProfilePage({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {maalems
+            {allMaalems
               .filter((m) => m.id !== maalem.id)
               .map((other, i) => (
                 <Link
@@ -448,11 +450,11 @@ export default async function MaalemProfilePage({
                       <div
                         className="absolute inset-0"
                         style={{
-                          background: maalems.indexOf(other) === 0
+                          background: allMaalems.indexOf(other) === 0
                             ? "linear-gradient(135deg, #3a2818 0%, #5a3e28 100%)"
-                            : maalems.indexOf(other) === 1
+                            : allMaalems.indexOf(other) === 1
                             ? "linear-gradient(135deg, #122840 0%, #1a3a52 100%)"
-                            : maalems.indexOf(other) === 2
+                            : allMaalems.indexOf(other) === 2
                             ? "linear-gradient(135deg, #12281a 0%, #1a3a28 100%)"
                             : "linear-gradient(135deg, #201a14 0%, #2a2218 100%)",
                           opacity: 0.8,

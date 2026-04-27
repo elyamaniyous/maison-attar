@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { products } from "@/lib/data";
+import { getProducts } from "@/db/helpers";
 import type { Product, ProductCategory } from "@/lib/types";
+
+export const revalidate = 60;
 import ProductCard from "@/components/product/ProductCard";
 import CollectionFilters from "@/components/product/CollectionFilters";
 import { CollectionPageSchema, BreadcrumbSchema } from "@/components/StructuredData";
@@ -70,6 +72,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
   const params = await searchParams;
   const { categorie, tri } = params;
 
+  const products = await getProducts();
   const filtered = filterAndSort(products, categorie, tri);
 
   return (
