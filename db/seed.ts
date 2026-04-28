@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm'
 import { hashPassword } from '@/lib/password'
 import { products as seedProducts, maalems as seedMaalems } from '@/lib/data'
 import { blogArticles } from '@/lib/blog-data'
+import { defaultPageContents } from '@/lib/page-content'
 
 function uuid(): string {
   // Simple deterministic-ish UUID using crypto if available
@@ -100,21 +101,23 @@ export async function seedIfEmpty(): Promise<void> {
     })
   }
 
-  // ── 5. Default page stubs ──────────────────────────────────────────────────
-  const defaultPageSlugs = [
-    'accueil',
-    'notre-histoire',
-    'livraison',
-    'entretien',
-    'faq',
-    'cgv',
+  // ── 5. Default page content ────────────────────────────────────────────────
+  const pageEntries: Array<{ slug: string }> = [
+    { slug: 'accueil' },
+    { slug: 'notre-histoire' },
+    { slug: 'livraison' },
+    { slug: 'entretien' },
+    { slug: 'faq' },
+    { slug: 'cgv' },
   ]
 
-  for (const slug of defaultPageSlugs) {
+  for (const { slug } of pageEntries) {
+    const key = slug as keyof typeof defaultPageContents
+    const sections = defaultPageContents[key] ?? {}
     await db.insert(schema.pages).values({
       id: uuid(),
       slug,
-      sections: JSON.stringify([]),
+      sections: JSON.stringify(sections),
       updatedAt: now(),
     })
   }
@@ -147,4 +150,58 @@ export async function seedIfEmpty(): Promise<void> {
   console.log(
     '[seed] Done. Admin: admin@maisonattar.com / attar2024'
   )
+}
+
+/**
+ * Migrates existing pages that were seeded with empty sections (`[]`)
+ * to the new flat key-value content from defaultPageContents.
+ *
+ * Safe to call on every startup — only updates rows that are still empty/legacy.
+ */
+export async function migratePageContent(): Promise<void> {
+  const slugs = Object.keys(defaultPageContents) as Array<keyof typeof defaultPageContents>
+
+  for (const slug of slugs) {
+    const rows = await db
+      .select()
+      .from(schema.pages)
+      .where(eq(schema.pages.slug, slug))
+      .limit(1)
+
+    if (!rows[0]) {
+      // Page row doesn't exist at all — insert it
+      await db.insert(schema.pages).values({
+        id: uuid(),
+        slug,
+        sections: JSON.stringify(defaultPageContents[slug]),
+        updatedAt: now(),
+      })
+      console.log(`[migrate] Inserted page: ${slug}`)
+      continue
+    }
+
+    // Check if sections is still the old empty/legacy format
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(rows[0].sections)
+    } catch {
+      parsed = null
+    }
+
+    const isEmpty =
+      parsed === null ||
+      (Array.isArray(parsed) && parsed.length === 0) ||
+      (typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed as object).length === 0)
+
+    if (isEmpty) {
+      await db
+        .update(schema.pages)
+        .set({
+          sections: JSON.stringify(defaultPageContents[slug]),
+          updatedAt: now(),
+        })
+        .where(eq(schema.pages.slug, slug))
+      console.log(`[migrate] Updated page content: ${slug}`)
+    }
+  }
 }

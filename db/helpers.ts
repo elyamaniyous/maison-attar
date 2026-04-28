@@ -32,10 +32,13 @@ export type {
 export type { BlogArticle } from '@/lib/blog-data'
 
 export type { PageContent, PageSection, PageSectionItem } from '@/lib/cms'
+export type { PageSectionsMap, KnownSlug } from '@/lib/page-content'
 
 import type { Product, Maalem } from '@/lib/types'
 import type { BlogArticle } from '@/lib/blog-data'
 import type { PageContent, PageSection } from '@/lib/cms'
+import type { PageSectionsMap, KnownSlug } from '@/lib/page-content'
+import { defaultPageContents } from '@/lib/page-content'
 
 // ─── JSON parse helpers ───────────────────────────────────────────────────────
 
@@ -240,6 +243,43 @@ export async function getPageContent(slug: string): Promise<PageContent | null> 
     .where(eq(schema.pages.slug, slug))
     .limit(1)
   return rows[0] ? pageRowToPageContent(rows[0]) : null
+}
+
+/**
+ * Returns the flat key-value sections object for a known page slug.
+ * If the DB row is missing or its sections is an empty/legacy array,
+ * falls back to the compile-time defaults from lib/page-content.ts.
+ */
+export async function getPageSections<S extends KnownSlug>(
+  slug: S
+): Promise<PageSectionsMap[S]> {
+  const defaults = defaultPageContents[slug]
+  try {
+    const rows = await db
+      .select()
+      .from(schema.pages)
+      .where(eq(schema.pages.slug, slug))
+      .limit(1)
+
+    if (!rows[0]) return defaults
+
+    const parsed = parseJson<unknown>(rows[0].sections, null)
+
+    // Accept only non-null, non-array objects with at least one key
+    if (
+      parsed !== null &&
+      typeof parsed === 'object' &&
+      !Array.isArray(parsed) &&
+      Object.keys(parsed as object).length > 0
+    ) {
+      // Merge: defaults first so new keys are always present
+      return { ...defaults, ...(parsed as PageSectionsMap[S]) }
+    }
+
+    return defaults
+  } catch {
+    return defaults
+  }
 }
 
 // ─── Settings query helpers ───────────────────────────────────────────────────

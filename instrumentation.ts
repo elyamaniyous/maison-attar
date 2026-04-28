@@ -17,11 +17,12 @@ export async function register() {
   if (process.env.NEXT_PHASE === 'phase-production-build') return
 
   try {
-    const { seedIfEmpty } = await import('./db/seed')
+    const { seedIfEmpty, migratePageContent } = await import('./db/seed')
     await seedIfEmpty()
+    await migratePageContent()
   } catch (err) {
     // Don't crash the server if seed fails — log and continue.
     // The DB may already be seeded by another instance.
-    console.error('[instrumentation] seedIfEmpty failed:', err)
+    console.error('[instrumentation] seed/migrate failed:', err)
   }
 }

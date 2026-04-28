@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { getFeaturedProducts } from "@/db/helpers"
+import { getFeaturedProducts, getPageSections } from "@/db/helpers"
 import type { Product } from "@/lib/types"
 import NewsletterForm from "@/components/NewsletterForm"
 import { LocalBusinessSchema, CollectionPageSchema } from "@/components/StructuredData"
@@ -13,6 +13,7 @@ import {
   HorizontalScroll,
 } from "@/components/animations"
 import HeroSection from "@/components/home/HeroSection"
+import type { AccueilSections } from "@/lib/page-content"
 
 export const revalidate = 60
 
@@ -58,7 +59,7 @@ function ArrowRightIcon({ className }: { className?: string }) {
 
 // ─── Section 2: Brand Manifesto ───────────────────────────────────────────────────
 
-function ManifestoSection() {
+function ManifestoSection({ content }: { content: AccueilSections }) {
   return (
     <section className="relative bg-cream py-32 overflow-hidden">
       {/* Decorative large letter in background */}
@@ -77,13 +78,13 @@ function ManifestoSection() {
           {/* Eyebrow */}
           <ScrollReveal direction="none" delay={0}>
             <p className="font-body text-[10px] tracking-[0.45em] uppercase text-gold mb-12">
-              Notre origine
+              {content.manifesto_eyebrow}
             </p>
           </ScrollReveal>
 
           {/* Text reveal manifesto */}
           <TextReveal
-            text="À Fès, dans la médina la plus ancienne du monde, deux matières se font face depuis des siècles. La terre cuite émaillée. Le fer forgé. Maison Attar est née du jour où un artisan a osé les unir."
+            text={content.manifesto_text}
             className="font-display italic text-ink leading-relaxed"
           />
 
@@ -103,34 +104,13 @@ function ManifestoSection() {
 
 // ─── Section 3: Three Pillars ────────────────────────────────────────────────────
 
-const pillars = [
-  {
-    number: 1,
-    label: "01",
-    title: "Zellige de Fès",
-    description:
-      "Chaque fragment est taillé à la main par nos maalems selon les 360 formes géométriques de la tradition fassienne, transmises depuis le XIVe siècle sans rupture.",
-    delay: 0,
-  },
-  {
-    number: 2,
-    label: "02",
-    title: "Acier Forgé",
-    description:
-      "Les bases sont forgées à froid, martelées une à une pour révéler les traces du geste. L'acier n'est pas peint — il est ciré, vivant, appelé à se patiner avec le temps.",
-    delay: 0.15,
-  },
-  {
-    number: 3,
-    label: "03",
-    title: "Pièce Unique",
-    description:
-      "Aucune table ne ressemble à une autre. Chaque composition naît d'une commande, d'une conversation, d'un maalem. Un certificat accompagne chaque pièce.",
-    delay: 0.3,
-  },
-]
+function PillarsSection({ content }: { content: AccueilSections }) {
+  const pillars = [
+    { number: 1, label: content.pillar_1_label, title: content.pillar_1_title, description: content.pillar_1_desc, delay: 0 },
+    { number: 2, label: content.pillar_2_label, title: content.pillar_2_title, description: content.pillar_2_desc, delay: 0.15 },
+    { number: 3, label: content.pillar_3_label, title: content.pillar_3_title, description: content.pillar_3_desc, delay: 0.3 },
+  ]
 
-function PillarsSection() {
   return (
     <section className="py-32 md:py-48 px-6 bg-cream-dark relative overflow-hidden">
       {/* Background texture lines */}
@@ -154,13 +134,13 @@ function PillarsSection() {
         <ScrollReveal direction="up">
           <div className="mb-24 md:mb-32">
             <p className="font-body text-[10px] tracking-[0.45em] uppercase text-gold mb-6">
-              La philosophie
+              {content.pillars_eyebrow}
             </p>
             <h2
               className="font-display font-light text-ink leading-none"
               style={{ fontSize: "clamp(2.5rem, 5vw, 6rem)" }}
             >
-              Trois principes
+              {content.pillars_title}
             </h2>
           </div>
         </ScrollReveal>
@@ -289,7 +269,7 @@ function FeaturedProductCard({ product, index }: { product: Product; index: numb
   )
 }
 
-function CollectionSection({ featured }: { featured: Product[] }) {
+function CollectionSection({ featured, content }: { featured: Product[]; content: AccueilSections }) {
   return (
     <section className="bg-cream overflow-hidden">
       {/* Header */}
@@ -298,19 +278,19 @@ function CollectionSection({ featured }: { featured: Product[] }) {
           <ScrollReveal direction="up">
             <div>
               <p className="font-body text-[10px] tracking-[0.45em] uppercase text-gold mb-5">
-                La collection
+                {content.collection_eyebrow}
               </p>
               <h2
                 className="font-display font-light text-ink leading-none"
                 style={{ fontSize: "clamp(3rem, 7vw, 8rem)" }}
               >
-                La Collection
+                {content.collection_title}
               </h2>
             </div>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={0.2}>
             <p className="font-body text-sm text-ink-muted max-w-xs leading-loose">
-              Chaque pièce est une conversation entre la terre et le feu.
+              {content.collection_subtitle}
             </p>
           </ScrollReveal>
         </div>
@@ -347,7 +327,7 @@ function CollectionSection({ featured }: { featured: Product[] }) {
 
 // ─── Section 5: Maalem Story ──────────────────────────────────────────────────────
 
-function MaalemSection() {
+function MaalemSection({ content }: { content: AccueilSections }) {
   return (
     <section className="bg-ink overflow-hidden">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 min-h-[700px]">
@@ -372,7 +352,7 @@ function MaalemSection() {
 
           <ScrollReveal direction="up" delay={0.1}>
             <p className="font-body text-[10px] tracking-[0.45em] uppercase text-gold mb-5">
-              Héritage vivant
+              {content.maalem_eyebrow}
             </p>
           </ScrollReveal>
 
@@ -381,7 +361,7 @@ function MaalemSection() {
               className="font-display font-light text-cream mb-10 leading-tight"
               style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}
             >
-              Le geste du maalem
+              {content.maalem_title}
             </h2>
           </ScrollReveal>
 
@@ -392,29 +372,26 @@ function MaalemSection() {
                 className="font-display italic text-gold leading-snug"
                 style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)" }}
               >
-                &ldquo;Chaque carreau est une prière&rdquo;
+                &ldquo;{content.maalem_quote}&rdquo;
               </p>
               <cite className="block font-body text-[10px] tracking-[0.3em] uppercase text-cream/40 mt-3 not-italic">
-                — Hassan Bensouda, Maalem
+                {content.maalem_quote_author}
               </cite>
             </blockquote>
           </ScrollReveal>
 
           <ScrollReveal direction="up" delay={0.4}>
             <p className="font-body text-sm text-cream/60 leading-loose mb-10 max-w-md">
-              Le maalem ne travaille pas avec des gabarits. Sa main est son outil
-              le plus précis — formée par des décennies de martèle, de taille,
-              d&apos;ajustage. Sept siècles de tradition transmise dans les ateliers
-              de la médina de Fès.
+              {content.maalem_body}
             </p>
           </ScrollReveal>
 
           <ScrollReveal direction="up" delay={0.5}>
             <Link
-              href="/maalems"
+              href={content.maalem_link_url}
               className="group inline-flex items-center gap-3 font-body text-xs tracking-[0.3em] uppercase text-cream/50 hover:text-gold transition-colors duration-400"
             >
-              Rencontrer nos artisans
+              {content.maalem_link_label}
               <span className="inline-block w-8 h-px bg-current transition-all duration-400 group-hover:w-16" />
             </Link>
           </ScrollReveal>
@@ -426,38 +403,14 @@ function MaalemSection() {
 
 // ─── Section 6: Process / Timeline ────────────────────────────────────────────────
 
-const processSteps = [
-  {
-    value: 48,
-    unit: "h",
-    label: "Votre commande",
-    description: "Nous accusons réception et votre maalem est sélectionné selon votre pièce.",
-    delay: 0,
-  },
-  {
-    value: 7,
-    unit: " sem.",
-    label: "De fabrication",
-    description: "La forge de la base en acier commence. Chaque soudure, à la main.",
-    delay: 0.15,
-  },
-  {
-    value: 1,
-    unit: " maalem",
-    label: "Dédié à votre pièce",
-    description: "Un seul artisan, du premier coup de marteau au dernier carreau de zellige.",
-    delay: 0.3,
-  },
-  {
-    value: 0,
-    unit: "∞",
-    label: "Pièces identiques",
-    description: "Chaque table est unique. Elle portera les traces du geste, pour toujours.",
-    delay: 0.45,
-  },
-]
+function ProcessSection({ content }: { content: AccueilSections }) {
+  const processSteps = [
+    { value: 48, unit: "h",      label: content.process_step1_label, description: content.process_step1_desc, delay: 0 },
+    { value: 7,  unit: " sem.",  label: content.process_step2_label, description: content.process_step2_desc, delay: 0.15 },
+    { value: 1,  unit: " maalem",label: content.process_step3_label, description: content.process_step3_desc, delay: 0.3 },
+    { value: 0,  unit: "∞",      label: content.process_step4_label, description: content.process_step4_desc, delay: 0.45 },
+  ]
 
-function ProcessSection() {
   return (
     <section className="py-32 md:py-48 px-6 bg-cream relative overflow-hidden">
       {/* Decorative dot grid */}
@@ -476,13 +429,13 @@ function ProcessSection() {
         <ScrollReveal direction="up">
           <div className="mb-24 text-center">
             <p className="font-body text-[10px] tracking-[0.45em] uppercase text-gold mb-5">
-              De l&apos;atelier à votre intérieur
+              {content.process_eyebrow}
             </p>
             <h2
               className="font-display font-light text-ink leading-none"
               style={{ fontSize: "clamp(2.5rem, 5vw, 6rem)" }}
             >
-              La promesse
+              {content.process_title}
             </h2>
           </div>
         </ScrollReveal>
@@ -542,7 +495,7 @@ function ProcessSection() {
 
 // ─── Section 7: Newsletter ────────────────────────────────────────────────────────
 
-function NewsletterSection() {
+function NewsletterSection({ content }: { content: AccueilSections }) {
   return (
     <section className="relative py-32 md:py-40 px-6 bg-ink overflow-hidden">
       {/* Grain texture - extra visible on dark bg */}
@@ -582,16 +535,13 @@ function NewsletterSection() {
             className="font-display font-light text-cream leading-tight mb-6"
             style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
           >
-            Les nouvelles
-            <br />
-            <span className="italic text-gold">de l&apos;atelier</span>
+            {content.newsletter_title}
           </h2>
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={0.2}>
           <p className="font-body text-sm text-cream/40 mb-12 tracking-wide max-w-sm mx-auto leading-loose">
-            Nouvelles pièces, portraits de maalems, coulisses de fabrication.
-            Une lettre par mois depuis Fès.
+            {content.newsletter_body}
           </p>
         </ScrollReveal>
 
@@ -602,7 +552,7 @@ function NewsletterSection() {
 
         <ScrollReveal direction="none" delay={0.4}>
           <p className="mt-6 font-body text-[10px] text-cream/20 tracking-wide">
-            Pas de spam. Juste des nouvelles de Fès, une fois par mois.
+            {content.newsletter_disclaimer}
           </p>
         </ScrollReveal>
 
@@ -622,17 +572,26 @@ function NewsletterSection() {
 // ─── Page ─────────────────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
-  const featured = await getFeaturedProducts()
+  const [featured, content] = await Promise.all([
+    getFeaturedProducts(),
+    getPageSections("accueil"),
+  ])
 
   return (
     <>
-      <HeroSection />
-      <ManifestoSection />
-      <PillarsSection />
-      <CollectionSection featured={featured} />
-      <MaalemSection />
-      <ProcessSection />
-      <NewsletterSection />
+      <HeroSection
+        eyebrow={content.hero_eyebrow}
+        title={content.hero_title}
+        subtitle={content.hero_subtitle}
+        ctaLabel={content.hero_cta_label}
+        ctaLink={content.hero_cta_link}
+      />
+      <ManifestoSection content={content} />
+      <PillarsSection content={content} />
+      <CollectionSection featured={featured} content={content} />
+      <MaalemSection content={content} />
+      <ProcessSection content={content} />
+      <NewsletterSection content={content} />
       <LocalBusinessSchema />
       <CollectionPageSchema />
     </>

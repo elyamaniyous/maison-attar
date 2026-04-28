@@ -47,7 +47,21 @@ function ArrowRightIcon({ className }: { className?: string }) {
   )
 }
 
-export default function HeroSection() {
+type HeroProps = {
+  eyebrow?: string
+  title?: string
+  subtitle?: string
+  ctaLabel?: string
+  ctaLink?: string
+}
+
+export default function HeroSection({
+  eyebrow = "Zellige & Acier Artisanal · Fès",
+  title = "Maison Attar",
+  subtitle = "Ce que les mains distillent, le temps ne peut pas l’effacer",
+  ctaLabel = "Découvrir la collection",
+  ctaLink = "/collection",
+}: HeroProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const { scrollYProgress } = useScroll({
@@ -103,7 +117,7 @@ export default function HeroSection() {
           transition={{ duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="font-body text-[10px] text-cream/50 uppercase mb-8 tracking-[0.45em]"
         >
-          Zellige & Acier Artisanal · Fès
+          {eyebrow}
         </motion.p>
 
         {/* Main title */}
@@ -116,7 +130,7 @@ export default function HeroSection() {
             fontSize: "clamp(3rem, 8vw, 10rem)",
           }}
         >
-          Maison Attar
+          {title}
         </motion.h1>
 
         {/* Gold separator line */}
@@ -135,7 +149,7 @@ export default function HeroSection() {
           className="font-display italic text-cream/80 mb-12 max-w-2xl leading-relaxed"
           style={{ fontSize: "clamp(1rem, 2.2vw, 1.6rem)" }}
         >
-          Ce que les mains distillent, le temps ne peut pas l&apos;effacer
+          {subtitle}
         </motion.p>
 
         {/* CTA */}
@@ -146,12 +160,12 @@ export default function HeroSection() {
         >
           <MagneticButton strength={0.35}>
             <Link
-              href="/collection"
+              href={ctaLink}
               className="relative inline-flex items-center gap-3 font-body text-xs tracking-[0.3em] uppercase border border-gold/70 text-cream px-10 py-5 overflow-hidden group transition-colors duration-500 hover:text-ink"
             >
               {/* Gold fill on hover */}
               <span className="absolute inset-0 bg-gold scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" />
-              <span className="relative z-10">Découvrir la collection</span>
+              <span className="relative z-10">{ctaLabel}</span>
               <ArrowRightIcon className="relative z-10 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
             </Link>
           </MagneticButton>

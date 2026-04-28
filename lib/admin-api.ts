@@ -61,7 +61,8 @@ export interface LoginResponse {
 
 export interface CmsPage {
   slug: string;
-  sections: PageContent["sections"];
+  /** Either a legacy PageSection[] array or the new flat key-value object */
+  sections: PageContent["sections"] | Record<string, string>;
   [key: string]: unknown;
 }
 
@@ -160,7 +161,7 @@ export const cmsApi = {
 
     update: (
       slug: string,
-      data: { sections: PageContent["sections"] }
+      data: { sections: PageContent["sections"] | Record<string, string> }
     ): Promise<CmsPage> =>
       api<CmsPage>(`/api/cms/pages/${slug}`, {
         method: "PUT",
