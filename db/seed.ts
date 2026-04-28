@@ -7,7 +7,7 @@
 
 import { db, schema } from './index'
 import { eq } from 'drizzle-orm'
-import { hashPassword } from '@/lib/auth'
+import { hashPassword } from '@/lib/password'
 import { products as seedProducts, maalems as seedMaalems } from '@/lib/data'
 import { blogArticles } from '@/lib/blog-data'
 

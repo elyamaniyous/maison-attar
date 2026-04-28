@@ -2,12 +2,16 @@ import { NextRequest } from 'next/server'
 import path from 'node:path'
 import fs from 'node:fs'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 type Ctx = { params: Promise<{ path: string[] }> }
 
 function getUploadsDir(): string {
-  if (fs.existsSync('/data')) return '/data/uploads'
+  // turbopackIgnore — these paths are evaluated at runtime, not build time
+  if (fs.existsSync(/* turbopackIgnore: true */ '/data')) return '/data/uploads'
   if (process.env.UPLOADS_DIR) return process.env.UPLOADS_DIR
-  return path.join(process.cwd(), 'public', 'uploads')
+  return path.join(/* turbopackIgnore: true */ process.cwd(), 'public', 'uploads')
 }
 
 // ─── GET /api/uploads/[...path] ───────────────────────────────────────────────

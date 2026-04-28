@@ -8,19 +8,20 @@
  * Cookie name: ma_session (HTTP-only, Secure in prod, SameSite=Lax).
  */
 
-import bcrypt from 'bcryptjs'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { db, schema } from '@/db/index'
 import { eq } from 'drizzle-orm'
 import type { User } from '@/db/schema'
 
+// Re-export Node-safe password helpers
+export { hashPassword, verifyPassword } from './password'
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const COOKIE_NAME = 'ma_session'
 const JWT_ALG = 'HS256'
 const SESSION_DAYS = 7
-const BCRYPT_ROUNDS = 10
 
 function getSecret(): Uint8Array {
   const secret =
@@ -28,18 +29,7 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret)
 }
 
-// ─── Password helpers ─────────────────────────────────────────────────────────
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, BCRYPT_ROUNDS)
-}
-
-export async function verifyPassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hash)
-}
+// (verifyPassword, hashPassword: re-exported above from ./password)
 
 // ─── JWT session ──────────────────────────────────────────────────────────────
 
