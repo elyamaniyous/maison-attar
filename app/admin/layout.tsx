@@ -204,15 +204,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         setAuthenticated(true);
       } catch {
         if (cancelled) return;
-        // Try to restore from localStorage as fallback (cookie may still be valid)
-        const storedUser = localStorage.getItem("admin_user");
-        if (storedUser) {
-          try {
-            setUser(JSON.parse(storedUser));
-            setAuthenticated(true);
-            return;
-          } catch { /* ignore */ }
-        }
+        // Auth check failed (401) — clear stale localStorage and force re-login.
+        // Never trust localStorage as source of truth for auth state.
+        localStorage.removeItem("admin_user");
+        setUser(null);
         setAuthenticated(false);
       }
     }

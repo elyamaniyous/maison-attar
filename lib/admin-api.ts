@@ -35,6 +35,28 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // ignore json parse errors
     }
+
+    // On 401 from any CMS endpoint (except the login attempt itself),
+    // the session is invalid: clear stale UI state and force a clean re-login.
+    // We reload the page so AdminLayout's checkAuth runs and shows the login form.
+    if (
+      res.status === 401 &&
+      typeof window !== "undefined" &&
+      path !== "/api/cms/auth/login"
+    ) {
+      try {
+        localStorage.removeItem("admin_user");
+      } catch {
+        // ignore storage errors
+      }
+      // Defer the reload slightly so the caller's catch can run first
+      setTimeout(() => {
+        if (window.location.pathname.startsWith("/admin")) {
+          window.location.reload();
+        }
+      }, 100);
+    }
+
     throw new ApiError(message, res.status);
   }
 

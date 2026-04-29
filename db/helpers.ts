@@ -13,6 +13,23 @@ import type {
   ArticleRow,
   PageRow,
 } from './schema'
+// Seed data — used as a fallback during build phase to avoid SQLite contention
+// across the 31 page-collection workers. Each worker would otherwise race on
+// initDb() and produce SQLITE_BUSY errors, breaking the build.
+import {
+  products as seedProducts,
+  maalems as seedMaalems,
+} from '@/lib/data'
+import { blogArticles as seedArticles } from '@/lib/blog-data'
+
+/**
+ * Detect Next.js build/page-collection phase.
+ * During build, multiple workers race on the same SQLite file; we short-circuit
+ * to seed data so the build is deterministic and contention-free.
+ */
+function isBuildPhase(): boolean {
+  return process.env.NEXT_PHASE === 'phase-production-build'
+}
 
 // Re-export public types so callers can `import type { Product } from '@/db/helpers'`
 export type {
@@ -147,11 +164,13 @@ function pageRowToPageContent(row: PageRow): PageContent {
 // ─── Maalem query helpers ─────────────────────────────────────────────────────
 
 export async function getMaalems(): Promise<Maalem[]> {
+  if (isBuildPhase()) return seedMaalems as Maalem[]
   const rows = await db.select().from(schema.maalems)
   return rows.map(maalemRowToMaalem)
 }
 
 export async function getMaalemBySlug(slug: string): Promise<Maalem | undefined> {
+  if (isBuildPhase()) return (seedMaalems as Maalem[]).find((m) => m.slug === slug)
   const rows = await db
     .select()
     .from(schema.maalems)
@@ -161,6 +180,7 @@ export async function getMaalemBySlug(slug: string): Promise<Maalem | undefined>
 }
 
 export async function getMaalemById(id: string): Promise<Maalem | undefined> {
+  if (isBuildPhase()) return (seedMaalems as Maalem[]).find((m) => m.id === id)
   const rows = await db
     .select()
     .from(schema.maalems)
@@ -187,11 +207,13 @@ async function fetchProductsWithMaalems(
 }
 
 export async function getProducts(): Promise<Product[]> {
+  if (isBuildPhase()) return seedProducts as Product[]
   const rows = await db.select().from(schema.products)
   return fetchProductsWithMaalems(rows)
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+  if (isBuildPhase()) return (seedProducts as Product[]).find((p) => p.slug === slug)
   const rows = await db
     .select()
     .from(schema.products)
@@ -203,6 +225,7 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
+  if (isBuildPhase()) return (seedProducts as Product[]).filter((p) => p.featured)
   const rows = await db
     .select()
     .from(schema.products)
@@ -211,6 +234,8 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 }
 
 export async function getProductsByCategory(category: string): Promise<Product[]> {
+  if (isBuildPhase())
+    return (seedProducts as Product[]).filter((p) => p.category === category)
   const rows = await db
     .select()
     .from(schema.products)
@@ -221,11 +246,13 @@ export async function getProductsByCategory(category: string): Promise<Product[]
 // ─── Article query helpers ────────────────────────────────────────────────────
 
 export async function getArticles(): Promise<BlogArticle[]> {
+  if (isBuildPhase()) return seedArticles as BlogArticle[]
   const rows = await db.select().from(schema.articles)
   return rows.map(articleRowToBlogArticle)
 }
 
 export async function getArticleBySlug(slug: string): Promise<BlogArticle | undefined> {
+  if (isBuildPhase()) return (seedArticles as BlogArticle[]).find((a) => a.slug === slug)
   const rows = await db
     .select()
     .from(schema.articles)
@@ -237,12 +264,17 @@ export async function getArticleBySlug(slug: string): Promise<BlogArticle | unde
 // ─── Page query helpers ───────────────────────────────────────────────────────
 
 export async function getPageContent(slug: string): Promise<PageContent | null> {
-  const rows = await db
-    .select()
-    .from(schema.pages)
-    .where(eq(schema.pages.slug, slug))
-    .limit(1)
-  return rows[0] ? pageRowToPageContent(rows[0]) : null
+  if (isBuildPhase()) return null
+  try {
+    const rows = await db
+      .select()
+      .from(schema.pages)
+      .where(eq(schema.pages.slug, slug))
+      .limit(1)
+    return rows[0] ? pageRowToPageContent(rows[0]) : null
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -254,6 +286,7 @@ export async function getPageSections<S extends KnownSlug>(
   slug: S
 ): Promise<PageSectionsMap[S]> {
   const defaults = defaultPageContents[slug]
+  if (isBuildPhase()) return defaults
   try {
     const rows = await db
       .select()
@@ -285,20 +318,30 @@ export async function getPageSections<S extends KnownSlug>(
 // ─── Settings query helpers ───────────────────────────────────────────────────
 
 export async function getSetting(key: string): Promise<unknown> {
-  const rows = await db
-    .select()
-    .from(schema.settings)
-    .where(eq(schema.settings.key, key))
-    .limit(1)
-  if (!rows[0]) return null
-  return parseJson<unknown>(rows[0].value, null)
+  if (isBuildPhase()) return null
+  try {
+    const rows = await db
+      .select()
+      .from(schema.settings)
+      .where(eq(schema.settings.key, key))
+      .limit(1)
+    if (!rows[0]) return null
+    return parseJson<unknown>(rows[0].value, null)
+  } catch {
+    return null
+  }
 }
 
 export async function getSettings(): Promise<Record<string, unknown>> {
-  const rows = await db.select().from(schema.settings)
-  const result: Record<string, unknown> = {}
-  for (const row of rows) {
-    result[row.key] = parseJson<unknown>(row.value, null)
+  if (isBuildPhase()) return {}
+  try {
+    const rows = await db.select().from(schema.settings)
+    const result: Record<string, unknown> = {}
+    for (const row of rows) {
+      result[row.key] = parseJson<unknown>(row.value, null)
+    }
+    return result
+  } catch {
+    return {}
   }
-  return result
 }
