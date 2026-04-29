@@ -15,7 +15,7 @@ function slugify(text: string): string {
 function parseArticle(row: ArticleRow) {
   return {
     ...row,
-    tags: (() => { try { return JSON.parse(row.tags) as unknown } catch { return [] } })(),
+    tags: row.tags,
   }
 }
 
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       excerpt: String(b['excerpt']),
       content: String(b['content']),
       category: String(b['category']),
-      tags: JSON.stringify(tags),
+      tags: tags,
       author: String(b['author']),
       featured: b['featured'] === true,
       publishedAt: typeof b['publishedAt'] === 'string' ? b['publishedAt'] : now,

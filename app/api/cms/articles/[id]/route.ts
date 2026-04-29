@@ -8,7 +8,7 @@ type Ctx = { params: Promise<{ id: string }> }
 function parseArticle(row: ArticleRow) {
   return {
     ...row,
-    tags: (() => { try { return JSON.parse(row.tags) as unknown } catch { return [] } })(),
+    tags: row.tags,
   }
 }
 
@@ -59,7 +59,7 @@ export async function PUT(req: Request, ctx: Ctx) {
     if (typeof b['excerpt'] === 'string') updates.excerpt = b['excerpt']
     if (typeof b['content'] === 'string') updates.content = b['content']
     if (typeof b['category'] === 'string') updates.category = b['category']
-    if (Array.isArray(b['tags'])) updates.tags = JSON.stringify(b['tags'])
+    if (Array.isArray(b['tags'])) updates.tags = b['tags']
     if (typeof b['author'] === 'string') updates.author = b['author']
     if (typeof b['featured'] === 'boolean') updates.featured = b['featured']
     if (typeof b['publishedAt'] === 'string') updates.publishedAt = b['publishedAt']

@@ -69,13 +69,13 @@ export async function seedIfEmpty(): Promise<void> {
       description: p.description,
       longDescription: p.longDescription,
       price: p.price,
-      images: JSON.stringify(p.images),
+      images: p.images,
       category: p.category,
-      dimensions: JSON.stringify(p.dimensions),
-      materials: JSON.stringify(p.materials),
+      dimensions: p.dimensions,
+      materials: p.materials,
       maalemId: p.maalem.id,
       fabricationHours: p.fabricationHours,
-      configurations: JSON.stringify(p.availableConfigurations),
+      configurations: p.availableConfigurations,
       inStock: p.inStock,
       featured: p.featured,
       createdAt: now(),
@@ -92,7 +92,7 @@ export async function seedIfEmpty(): Promise<void> {
       excerpt: a.excerpt,
       content: a.content,
       category: a.category,
-      tags: JSON.stringify(a.tags),
+      tags: a.tags,
       author: a.author,
       featured: a.featured,
       publishedAt: a.publishedAt,
@@ -117,7 +117,7 @@ export async function seedIfEmpty(): Promise<void> {
     await db.insert(schema.pages).values({
       id: uuid(),
       slug,
-      sections: JSON.stringify(sections),
+      sections: sections,
       updatedAt: now(),
     })
   }
@@ -143,7 +143,7 @@ export async function seedIfEmpty(): Promise<void> {
   for (const setting of defaultSettings) {
     await db.insert(schema.settings).values({
       key: setting.key,
-      value: JSON.stringify(setting.value),
+      value: setting.value,
     })
   }
 
@@ -173,23 +173,18 @@ export async function migratePageContent(): Promise<void> {
       await db.insert(schema.pages).values({
         id: uuid(),
         slug,
-        sections: JSON.stringify(defaultPageContents[slug]),
+        sections: defaultPageContents[slug],
         updatedAt: now(),
       })
       console.log(`[migrate] Inserted page: ${slug}`)
       continue
     }
 
-    // Check if sections is still the old empty/legacy format
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(rows[0].sections)
-    } catch {
-      parsed = null
-    }
+    // Check if sections is still empty (jsonb returns the parsed value directly)
+    const parsed: unknown = rows[0].sections
 
     const isEmpty =
-      parsed === null ||
+      parsed == null ||
       (Array.isArray(parsed) && parsed.length === 0) ||
       (typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed as object).length === 0)
 
@@ -197,7 +192,7 @@ export async function migratePageContent(): Promise<void> {
       await db
         .update(schema.pages)
         .set({
-          sections: JSON.stringify(defaultPageContents[slug]),
+          sections: defaultPageContents[slug],
           updatedAt: now(),
         })
         .where(eq(schema.pages.slug, slug))

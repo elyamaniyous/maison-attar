@@ -57,14 +57,21 @@ import type { PageContent, PageSection } from '@/lib/cms'
 import type { PageSectionsMap, KnownSlug } from '@/lib/page-content'
 import { defaultPageContents } from '@/lib/page-content'
 
-// ─── JSON parse helpers ───────────────────────────────────────────────────────
+// ─── JSON helpers ─────────────────────────────────────────────────────────────
+// Postgres jsonb columns return parsed values automatically via postgres-js.
+// These helpers add a defensive cast with fallback in case the column was
+// somehow stored as a string (e.g. legacy data, or unexpected input).
 
-function parseJson<T>(raw: string, fallback: T): T {
-  try {
-    return JSON.parse(raw) as T
-  } catch {
-    return fallback
+function asJson<T>(raw: unknown, fallback: T): T {
+  if (raw == null) return fallback
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw) as T
+    } catch {
+      return fallback
+    }
   }
+  return raw as T
 }
 
 // ─── Row → public type mappers ────────────────────────────────────────────────
@@ -109,18 +116,18 @@ function productRowToProduct(
     description: row.description,
     longDescription: row.longDescription,
     price: row.price,
-    images: parseJson<string[]>(row.images, []),
+    images: asJson<string[]>(row.images, []),
     category: row.category as Product['category'],
-    dimensions: parseJson(row.dimensions, {
+    dimensions: asJson(row.dimensions, {
       width: 0,
       height: 0,
       depth: 0,
       weight: 0,
     }),
-    materials: parseJson(row.materials, { zellige: '', base: '' }),
+    materials: asJson(row.materials, { zellige: '', base: '' }),
     maalem,
     fabricationHours: row.fabricationHours,
-    availableConfigurations: parseJson(row.configurations, {
+    availableConfigurations: asJson(row.configurations, {
       zelliges: [],
       sizes: [],
       bases: [],
@@ -138,7 +145,7 @@ function articleRowToBlogArticle(row: ArticleRow): BlogArticle {
     excerpt: row.excerpt,
     content: row.content,
     category: row.category as BlogArticle['category'],
-    tags: parseJson<string[]>(row.tags, []),
+    tags: asJson<string[]>(row.tags, []),
     author: row.author,
     publishedAt: row.publishedAt,
     // These fields aren't stored in DB — provide sensible defaults
@@ -146,7 +153,7 @@ function articleRowToBlogArticle(row: ArticleRow): BlogArticle {
     featured: Boolean(row.featured),
     seoTitle: row.title,
     seoDescription: row.excerpt,
-    geoKeywords: parseJson<string[]>(row.tags, []),
+    geoKeywords: asJson<string[]>(row.tags, []),
   }
 }
 
@@ -155,7 +162,7 @@ function pageRowToPageContent(row: PageRow): PageContent {
     id: row.id,
     slug: row.slug,
     title: row.slug, // pages table has no title column; use slug as fallback
-    sections: parseJson<PageSection[]>(row.sections, []),
+    sections: asJson<PageSection[]>(row.sections, []),
     lastModified: row.updatedAt,
     modifiedBy: 'admin',
   }
@@ -296,7 +303,7 @@ export async function getPageSections<S extends KnownSlug>(
 
     if (!rows[0]) return defaults
 
-    const parsed = parseJson<unknown>(rows[0].sections, null)
+    const parsed = asJson<unknown>(rows[0].sections, null)
 
     // Accept only non-null, non-array objects with at least one key
     if (
@@ -326,7 +333,7 @@ export async function getSetting(key: string): Promise<unknown> {
       .where(eq(schema.settings.key, key))
       .limit(1)
     if (!rows[0]) return null
-    return parseJson<unknown>(rows[0].value, null)
+    return asJson<unknown>(rows[0].value, null)
   } catch {
     return null
   }
@@ -338,7 +345,7 @@ export async function getSettings(): Promise<Record<string, unknown>> {
     const rows = await db.select().from(schema.settings)
     const result: Record<string, unknown> = {}
     for (const row of rows) {
-      result[row.key] = parseJson<unknown>(row.value, null)
+      result[row.key] = asJson<unknown>(row.value, null)
     }
     return result
   } catch {

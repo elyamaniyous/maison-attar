@@ -1,8 +1,8 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { pgTable, text, integer, boolean, jsonb } from 'drizzle-orm/pg-core'
 
 // ─── users ────────────────────────────────────────────────────────────────────
 
-export const users = sqliteTable('users', {
+export const users = pgTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
@@ -16,7 +16,7 @@ export type NewUser = typeof users.$inferInsert
 
 // ─── sessions ─────────────────────────────────────────────────────────────────
 
-export const sessions = sqliteTable('sessions', {
+export const sessions = pgTable('sessions', {
   id: text('id').primaryKey(),
   userId: text('user_id')
     .notNull()
@@ -30,7 +30,7 @@ export type NewSession = typeof sessions.$inferInsert
 
 // ─── maalems ─────────────────────────────────────────────────────────────────
 
-export const maalems = sqliteTable('maalems', {
+export const maalems = pgTable('maalems', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
@@ -50,7 +50,7 @@ export type NewMaalem = typeof maalems.$inferInsert
 
 // ─── products ─────────────────────────────────────────────────────────────────
 
-export const products = sqliteTable('products', {
+export const products = pgTable('products', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
@@ -58,16 +58,16 @@ export const products = sqliteTable('products', {
   longDescription: text('long_description').notNull(),
   // price stored as integer (EUR, not cents — matches existing data shape)
   price: integer('price').notNull(),
-  // JSON columns stored as text
-  images: text('images').notNull(),               // string[]
+  // JSON columns stored as jsonb (Postgres native, indexable, queryable)
+  images: jsonb('images').notNull(),               // string[]
   category: text('category').notNull(),
-  dimensions: text('dimensions').notNull(),        // ProductDimensions
-  materials: text('materials').notNull(),          // ProductMaterials
+  dimensions: jsonb('dimensions').notNull(),        // ProductDimensions
+  materials: jsonb('materials').notNull(),          // ProductMaterials
   maalemId: text('maalem_id').references(() => maalems.id, { onDelete: 'set null' }),
   fabricationHours: integer('fabrication_hours').notNull(),
-  configurations: text('configurations').notNull(), // ProductConfigurations
-  inStock: integer('in_stock', { mode: 'boolean' }).notNull().default(true),
-  featured: integer('featured', { mode: 'boolean' }).notNull().default(false),
+  configurations: jsonb('configurations').notNull(), // ProductConfigurations
+  inStock: boolean('in_stock').notNull().default(true),
+  featured: boolean('featured').notNull().default(false),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })
@@ -77,16 +77,16 @@ export type NewProduct = typeof products.$inferInsert
 
 // ─── articles ─────────────────────────────────────────────────────────────────
 
-export const articles = sqliteTable('articles', {
+export const articles = pgTable('articles', {
   id: text('id').primaryKey(),
   slug: text('slug').notNull().unique(),
   title: text('title').notNull(),
   excerpt: text('excerpt').notNull(),
   content: text('content').notNull(),
   category: text('category').notNull(),
-  tags: text('tags').notNull(),   // string[] as JSON
+  tags: jsonb('tags').notNull(),   // string[] as jsonb
   author: text('author').notNull(),
-  featured: integer('featured', { mode: 'boolean' }).notNull().default(false),
+  featured: boolean('featured').notNull().default(false),
   publishedAt: text('published_at').notNull(),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
@@ -97,10 +97,10 @@ export type NewArticle = typeof articles.$inferInsert
 
 // ─── pages ────────────────────────────────────────────────────────────────────
 
-export const pages = sqliteTable('pages', {
+export const pages = pgTable('pages', {
   id: text('id').primaryKey(),
   slug: text('slug').notNull().unique(),
-  sections: text('sections').notNull(), // PageSection[] as JSON
+  sections: jsonb('sections').notNull(), // PageSections object as jsonb
   updatedAt: text('updated_at').notNull(),
 })
 
@@ -109,9 +109,9 @@ export type NewPage = typeof pages.$inferInsert
 
 // ─── settings ─────────────────────────────────────────────────────────────────
 
-export const settings = sqliteTable('settings', {
+export const settings = pgTable('settings', {
   key: text('key').primaryKey(),
-  value: text('value').notNull(), // JSON-encoded value
+  value: jsonb('value').notNull(), // JSON-encoded value
 })
 
 export type SettingRow = typeof settings.$inferSelect
@@ -119,15 +119,15 @@ export type NewSetting = typeof settings.$inferInsert
 
 // ─── orders ───────────────────────────────────────────────────────────────────
 
-export const orders = sqliteTable('orders', {
+export const orders = pgTable('orders', {
   id: text('id').primaryKey(),
   customerEmail: text('customer_email').notNull(),
-  items: text('items').notNull(),           // CartItem[] as JSON
+  items: jsonb('items').notNull(),           // CartItem[] as jsonb
   total: integer('total').notNull(),
   status: text('status').notNull(),
   maalemName: text('maalem_name').notNull(),
   estimatedDelivery: text('estimated_delivery').notNull(),
-  trackingSteps: text('tracking_steps').notNull(), // TrackingStep[] as JSON
+  trackingSteps: jsonb('tracking_steps').notNull(), // TrackingStep[] as jsonb
   createdAt: text('created_at').notNull(),
 })
 

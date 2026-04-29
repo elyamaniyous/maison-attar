@@ -8,7 +8,7 @@ type Ctx = { params: Promise<{ slug: string }> }
 function parsePage(row: PageRow) {
   return {
     ...row,
-    sections: (() => { try { return JSON.parse(row.sections) as unknown } catch { return [] } })(),
+    sections: row.sections,
   }
 }
 
@@ -52,7 +52,7 @@ export async function PUT(req: Request, ctx: Ctx) {
     const b = body as Record<string, unknown>
     const now = new Date().toISOString()
 
-    const sections = b['sections'] !== undefined ? JSON.stringify(b['sections']) : existing[0].sections
+    const sections = b['sections'] !== undefined ? b['sections'] : existing[0].sections
 
     await db
       .update(schema.pages)

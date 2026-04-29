@@ -11,7 +11,7 @@ export async function GET() {
     const result: Record<string, unknown> = {}
     for (const row of rows) {
       try {
-        result[row.key] = JSON.parse(row.value) as unknown
+        result[row.key] = row.value
       } catch {
         result[row.key] = row.value
       }
@@ -44,7 +44,7 @@ export async function PUT(req: Request) {
     const entries = Object.entries(body as Record<string, unknown>)
 
     for (const [key, value] of entries) {
-      const encoded = JSON.stringify(value)
+      const encoded = value
       const existing = await db
         .select()
         .from(schema.settings)
@@ -63,7 +63,7 @@ export async function PUT(req: Request) {
     const result: Record<string, unknown> = {}
     for (const row of rows) {
       try {
-        result[row.key] = JSON.parse(row.value) as unknown
+        result[row.key] = row.value
       } catch {
         result[row.key] = row.value
       }

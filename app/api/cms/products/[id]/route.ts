@@ -8,10 +8,10 @@ type Ctx = { params: Promise<{ id: string }> }
 function buildProductResponse(row: ProductRow, maalemRow: MaalemRow | null) {
   return {
     ...row,
-    images: (() => { try { return JSON.parse(row.images) as unknown } catch { return [] } })(),
-    dimensions: (() => { try { return JSON.parse(row.dimensions) as unknown } catch { return {} } })(),
-    materials: (() => { try { return JSON.parse(row.materials) as unknown } catch { return {} } })(),
-    configurations: (() => { try { return JSON.parse(row.configurations) as unknown } catch { return {} } })(),
+    images: row.images,
+    dimensions: row.dimensions,
+    materials: row.materials,
+    configurations: row.configurations,
     maalem: maalemRow
       ? { id: maalemRow.id, name: maalemRow.name, image: maalemRow.image, bio: maalemRow.bio }
       : null,
@@ -80,10 +80,10 @@ export async function PUT(req: Request, ctx: Ctx) {
     if (typeof b['fabricationHours'] === 'number') updates.fabricationHours = b['fabricationHours']
     if (typeof b['inStock'] === 'boolean') updates.inStock = b['inStock']
     if (typeof b['featured'] === 'boolean') updates.featured = b['featured']
-    if (Array.isArray(b['images'])) updates.images = JSON.stringify(b['images'])
-    if (typeof b['dimensions'] === 'object' && b['dimensions'] !== null) updates.dimensions = JSON.stringify(b['dimensions'])
-    if (typeof b['materials'] === 'object' && b['materials'] !== null) updates.materials = JSON.stringify(b['materials'])
-    if (typeof b['configurations'] === 'object' && b['configurations'] !== null) updates.configurations = JSON.stringify(b['configurations'])
+    if (Array.isArray(b['images'])) updates.images = b['images']
+    if (typeof b['dimensions'] === 'object' && b['dimensions'] !== null) updates.dimensions = b['dimensions']
+    if (typeof b['materials'] === 'object' && b['materials'] !== null) updates.materials = b['materials']
+    if (typeof b['configurations'] === 'object' && b['configurations'] !== null) updates.configurations = b['configurations']
 
     await db.update(schema.products).set(updates).where(eq(schema.products.id, id))
     const product = await getProductWithMaalem(id)

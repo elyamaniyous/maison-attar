@@ -17,10 +17,10 @@ function slugify(text: string): string {
 function buildProductResponse(row: ProductRow, maalemRow: MaalemRow | null) {
   return {
     ...row,
-    images: (() => { try { return JSON.parse(row.images) as unknown } catch { return [] } })(),
-    dimensions: (() => { try { return JSON.parse(row.dimensions) as unknown } catch { return {} } })(),
-    materials: (() => { try { return JSON.parse(row.materials) as unknown } catch { return {} } })(),
-    configurations: (() => { try { return JSON.parse(row.configurations) as unknown } catch { return {} } })(),
+    images: row.images,
+    dimensions: row.dimensions,
+    materials: row.materials,
+    configurations: row.configurations,
     maalem: maalemRow
       ? { id: maalemRow.id, name: maalemRow.name, image: maalemRow.image, bio: maalemRow.bio }
       : null,
@@ -93,13 +93,13 @@ export async function POST(req: Request) {
       description: String(b['description'] ?? ''),
       longDescription: String(b['longDescription'] ?? ''),
       price: Number(b['price']),
-      images: JSON.stringify(images),
+      images: images,
       category: String(b['category']),
-      dimensions: JSON.stringify(dimensions),
-      materials: JSON.stringify(materials),
+      dimensions: dimensions,
+      materials: materials,
       maalemId: typeof b['maalemId'] === 'string' ? b['maalemId'] : null,
       fabricationHours: Number(b['fabricationHours']),
-      configurations: JSON.stringify(configurations),
+      configurations: configurations,
       inStock: b['inStock'] !== false,
       featured: b['featured'] === true,
       createdAt: now,

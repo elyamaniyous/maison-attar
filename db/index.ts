@@ -1,63 +1,82 @@
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+/**
+ * db/index.ts
+ *
+ * Postgres connection via postgres-js + drizzle-orm.
+ * Uses DATABASE_URL env var (Railway injects this automatically when a
+ * Postgres service is linked to the web app).
+ *
+ * Lazy singleton: the connection is opened on first DB access, not at
+ * module import time. This keeps `next build` fast and avoids opening
+ * a connection during the build phase (helpers short-circuit to seed
+ * data when NEXT_PHASE === 'phase-production-build').
+ */
+
+import postgres from 'postgres'
+import { drizzle } from 'drizzle-orm/postgres-js'
 import * as schema from './schema'
 import { initDb } from './migrate'
-import path from 'node:path'
-import fs from 'node:fs'
 
-const DB_DIR = process.env.DATA_DIR ?? path.join(process.cwd(), 'data')
-const DB_PATH = path.join(DB_DIR, 'maison-attar.db')
-
-// Lazy singleton: defer DB opening until first access.
-// This avoids multiple Next.js build workers racing on initDb() at module load.
-let _sqlite: Database.Database | null = null
+let _client: ReturnType<typeof postgres> | null = null
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null
 let _initialized = false
 
-function getSqlite(): Database.Database {
-  if (_sqlite) return _sqlite
+function getClient(): ReturnType<typeof postgres> {
+  if (_client) return _client
 
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true })
+  const connectionString = process.env.DATABASE_URL
+  if (!connectionString) {
+    throw new Error(
+      '[db] DATABASE_URL is not set. Set it in your .env or Railway env vars (Railway auto-injects when a Postgres service is linked).'
+    )
   }
 
-  const sqlite = new Database(DB_PATH)
+  // Detect Railway internal vs external URL — internal is plain TCP, external needs SSL.
+  // Default to SSL for safety; Railway internal URLs accept SSL too.
+  const url = new URL(connectionString)
+  const isLocal =
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.hostname.endsWith('.local')
 
-  // Concurrency-safe configuration:
-  //   - WAL mode allows multiple readers + 1 writer concurrently
-  //   - busy_timeout makes operations wait up to 10s for a lock instead of erroring
-  //   - synchronous = NORMAL is the recommended setting for WAL mode
-  sqlite.pragma('journal_mode = WAL')
-  sqlite.pragma('busy_timeout = 10000')
-  sqlite.pragma('synchronous = NORMAL')
-  sqlite.pragma('foreign_keys = ON')
+  _client = postgres(connectionString, {
+    max: 10,                  // connection pool size
+    idle_timeout: 20,         // close idle conns after 20s
+    connect_timeout: 30,
+    ssl: isLocal ? false : 'require',
+    onnotice: () => {},       // suppress NOTICE logs
+  })
 
-  // Initialize schema once per process
-  if (!_initialized) {
-    try {
-      initDb(sqlite)
-      _initialized = true
-    } catch (err) {
-      // If another worker created tables first, IF NOT EXISTS makes this idempotent.
-      // Only rethrow if it's not a benign concurrency error.
-      const msg = err instanceof Error ? err.message : String(err)
-      if (!msg.includes('already exists')) throw err
-      _initialized = true
-    }
-  }
-
-  _sqlite = sqlite
-  return sqlite
+  return _client
 }
 
-// Drizzle wrapper with lazy connection
+async function ensureInitialized(): Promise<void> {
+  if (_initialized) return
+  _initialized = true
+  try {
+    await initDb(getClient())
+  } catch (err) {
+    // initDb uses CREATE TABLE IF NOT EXISTS — safe to retry across instances.
+    const msg = err instanceof Error ? err.message : String(err)
+    if (!msg.includes('already exists')) {
+      _initialized = false
+      throw err
+    }
+  }
+}
+
+// Drizzle wrapper — connection opens lazily on first access.
+// We don't await ensureInitialized() in the Proxy's get because callers
+// don't await property access. Instead we run init at the entry points
+// (instrumentation.ts) and on first query failure as a safety net.
 export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
   get(_target, prop) {
     if (!_db) {
-      _db = drizzle(getSqlite(), { schema })
+      _db = drizzle(getClient(), { schema })
+      // Fire-and-forget init — safe because all DDL uses IF NOT EXISTS
+      void ensureInitialized()
     }
     return Reflect.get(_db, prop)
   },
 })
 
-export { schema }
+export { schema, ensureInitialized }

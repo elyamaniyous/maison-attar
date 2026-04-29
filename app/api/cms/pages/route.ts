@@ -5,7 +5,7 @@ import type { PageRow } from '@/db/schema'
 function parsePage(row: PageRow) {
   return {
     ...row,
-    sections: (() => { try { return JSON.parse(row.sections) as unknown } catch { return [] } })(),
+    sections: row.sections,
   }
 }
 
